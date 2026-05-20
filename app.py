@@ -149,7 +149,7 @@ st.markdown(dark_anime_style, unsafe_allow_html=True)
 # FUNGSI DATA LOADING & CACHING
 # ===================================
 
-@st.cache_data
+@st.cache_data(ttl=3600)
 def load_anime_data():
     """
     Load dataset anime dari CSV
@@ -520,6 +520,11 @@ def main():
             "Pilih Halaman:",
             ["🎯 Rekomendasi Anime", "⭐ Top Rating", "🔥 Populer", "🔍 Search & Filter", "📊 Statistics"]
         )
+        
+        st.markdown("---")
+        if st.button("🔄 Refresh Data", use_container_width=True):
+            st.cache_data.clear()
+            st.rerun()
     
     # ===================================
     # HALAMAN 1: REKOMENDASI ANIME
