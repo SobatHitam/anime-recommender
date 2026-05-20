@@ -394,7 +394,8 @@ def get_anime_recommendations(anime_title, anime_data, tf_vectors, genre_vectors
             'episodes': anime['episodes'],
             'synopsis': anime['synopsis'],
             'similarity_score': sim,
-            'matching_types': matching_types
+            'matching_types': matching_types,
+            'image_url': anime.get('image_url', '')
         })
     
     return recommendations
@@ -626,7 +627,7 @@ def main():
         
         for idx, anime in enumerate(popular_anime, 1):
             st.markdown(f"### 🌟 #{idx} - {anime['title']}")
-            display_anime_card(anime['title'], anime['score'], anime['type'], anime['episodes'], anime['synopsis'])
+            display_anime_card(anime['title'], anime['score'], anime['type'], anime['episodes'], anime['synopsis'], anime.get('image_url', ''))
             st.markdown("---")
     
     # ===================================
@@ -650,7 +651,7 @@ def main():
                     if search_results:
                         st.success(f"✅ Ditemukan {len(search_results)} hasil!")
                         for anime in search_results:
-                            display_anime_card(anime['title'], anime['score'], anime['type'], anime['episodes'], anime['synopsis'])
+                            display_anime_card(anime['title'], anime['score'], anime['type'], anime['episodes'], anime['synopsis'], anime.get('image_url', ''))
                             st.markdown("---")
                     else:
                         st.warning("❌ Tidak ada anime yang sesuai.")
@@ -683,7 +684,7 @@ def main():
                     st.success(f"✅ Ditemukan {len(unique_anime)} anime!")
                     
                     for anime in unique_anime:
-                        display_anime_card(anime['title'], anime['score'], anime['type'], anime['episodes'], anime['synopsis'])
+                        display_anime_card(anime['title'], anime['score'], anime['type'], anime['episodes'], anime['synopsis'], anime.get('image_url', ''))
                         st.markdown("---")
     
     # ===================================
@@ -732,7 +733,7 @@ def main():
         <div style="text-align: center; color: #a0a0a0; margin-top: 2rem; padding: 1rem;">
             <p>🎌 <strong>Sistem Rekomendasi Anime</strong> 🎌</p>
             <p>Dibuat dengan ❤️ menggunakan Streamlit dan TF-IDF Cosine Similarity</p>
-            <p style="font-size: 0.9rem;">© 2024 Anime Recommender System - Content-Based Filtering</p>
+            <p style="font-size: 0.9rem;">© 2026 Anime Recommender System - Content-Based Filtering</p>
         </div>
     """, unsafe_allow_html=True)
 
