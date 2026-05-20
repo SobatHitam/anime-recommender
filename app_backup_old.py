@@ -1,7 +1,7 @@
 # ===================================
-# SISTEM REKOMENDASI ANIME - STREAMLIT APP (OPTIMIZED)
+# SISTEM REKOMENDASI ANIME - STREAMLIT APP (SIMPLIFIED)
 # Menggunakan Content-Based Filtering dengan TF-IDF dan Cosine Similarity
-# Versi Optimized untuk 10K+ Dataset
+# Versi tanpa Pandas/Numpy (untuk kompatibilitas Python 3.14)
 # ===================================
 
 # Import library yang diperlukan
@@ -146,33 +146,23 @@ p, span {
 st.markdown(dark_anime_style, unsafe_allow_html=True)
 
 # ===================================
-# FUNGSI DATA LOADING & CACHING (OPTIMIZED)
+# FUNGSI DATA LOADING & CACHING
 # ===================================
 
 @st.cache_data(ttl=3600)
 def load_anime_data():
     """
-    Load dataset anime dari CSV - ambil hanya kolom penting
-    OPTIMASI: Hanya muat kolom yang diperlukan untuk mengurangi memory footprint
+    Load dataset anime dari CSV
     """
     anime_data = []
-    required_columns = ['anime_id', 'title', 'score', 'type', 'episodes', 'synopsis', 'image_url']
-    
     try:
         with open('anime.csv', 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             for row in reader:
                 try:
-                    # Filter kolom yang digunakan saja
-                    filtered_row = {}
-                    for col in required_columns:
-                        if col in row:
-                            filtered_row[col] = row[col]
-                    
-                    # Konversi score ke float
-                    filtered_row['score'] = float(filtered_row.get('score', 0))
-                    anime_data.append(filtered_row)
-                except Exception as e:
+                    row['score'] = float(row['score'])
+                    anime_data.append(row)
+                except:
                     continue
     except FileNotFoundError:
         st.error("❌ File anime.csv tidak ditemukan!")
@@ -199,21 +189,26 @@ def preprocess_text(text):
     - Hapus stopwords
     - Lemmatization
     """
-    if not text:
-        return ""
-    
+    # Ubah ke lowercase
     text = text.lower()
+    
+    # Hapus URL
     text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)
+    
+    # Hapus karakter khusus dan angka
     text = re.sub(r'[^a-zA-Z\s]', '', text)
+    
+    # Hapus spasi berlebih
     text = ' '.join(text.split())
     
+    # Hapus stopwords dan lakukan lemmatization
     stop_words = get_stopwords()
     lemmatizer = WordNetLemmatizer()
     
     words = text.split()
     processed_words = []
     for word in words:
-        if word not in stop_words and len(word) > 2:
+        if word not in stop_words and len(word) > 2:  # Filter stopwords dan kata pendek
             lemma = lemmatizer.lemmatize(word)
             processed_words.append(lemma)
     
@@ -226,7 +221,10 @@ def preprocess_text(text):
 def extract_genres(anime_data):
     """
     Extract dan buat binary encoding untuk anime types
+    Karena dataset tidak memiliki genre column, kita gunakan type sebagai feature
+    Mengembalikan: genre_list, genre_vectors
     """
+    # Collect all unique types
     all_types = set()
     for anime in anime_data:
         types_str = anime.get('type', '')
@@ -235,6 +233,7 @@ def extract_genres(anime_data):
     
     genre_list = sorted(list(all_types))
     
+    # Create binary vectors for types
     genre_vectors = []
     for anime in anime_data:
         vector = []
@@ -248,21 +247,19 @@ def extract_genres(anime_data):
     return genre_list, genre_vectors
 
 # ===================================
-# FUNGSI TF-IDF MANUAL IMPLEMENTATION (CACHED)
+# FUNGSI TF-IDF MANUAL IMPLEMENTATION
 # ===================================
 
-@st.cache_resource
-def build_tfidf_features(anime_data_tuple):
+def build_tfidf_features(anime_data):
     """
     Build TF-IDF features untuk semua anime
-    OPTIMASI: Cached dengan @st.cache_resource agar hanya dihitung sekali
-    Input: tuple of anime data (convert list to tuple untuk hashability)
+    Menggabungkan synopsis sebagai content
+    Mengembalikan: documents, vocabulary, tf_vectors, genre_vectors, genre_list
     """
-    anime_data = list(anime_data_tuple)
-    
-    # Prepare documents
+    # Prepare content untuk setiap anime (gunakan synopsis)
     documents = []
     for anime in anime_data:
+        # Gunakan synopsis sebagai main content
         synopsis = anime.get('synopsis', '')
         processed_content = preprocess_text(synopsis)
         documents.append(processed_content)
@@ -292,13 +289,16 @@ def build_tfidf_features(anime_data_tuple):
         terms = doc.split()
         
         for term in vocabulary:
+            # Calculate TF
             tf = terms.count(term) / max(len(terms), 1)
+            
+            # TF-IDF
             tfidf_value = tf * idf.get(term, 0)
             vector.append(tfidf_value)
         
         tf_vectors.append(vector)
     
-    # Extract type vectors
+    # Extract type vectors (since no genre column)
     genre_list, genre_vectors = extract_genres(anime_data)
     
     return documents, vocabulary, tf_vectors, genre_vectors, genre_list
@@ -310,10 +310,14 @@ def cosine_similarity(vec1, vec2):
     if len(vec1) != len(vec2):
         return 0.0
     
+    # Dot product
     dot_product = sum(a * b for a, b in zip(vec1, vec2))
+    
+    # Magnitudes
     magnitude1 = math.sqrt(sum(a ** 2 for a in vec1))
     magnitude2 = math.sqrt(sum(b ** 2 for b in vec2))
     
+    # Avoid division by zero
     if magnitude1 == 0 or magnitude2 == 0:
         return 0.0
     
@@ -328,6 +332,7 @@ def hybrid_similarity(tfidf_sim, genre_sim, tfidf_weight=0.7, genre_weight=0.3):
 def get_matching_genres(anime1_genres, anime2_genres, genre_list):
     """
     Dapatkan tipe yang cocok antara dua anime
+    (Karena dataset tidak punya genre, ini menggunakan type matching)
     """
     matching_genres = []
     for i, genre in enumerate(genre_list):
@@ -336,14 +341,15 @@ def get_matching_genres(anime1_genres, anime2_genres, genre_list):
     return matching_genres
 
 # ===================================
-# FUNGSI REKOMENDASI (OPTIMIZED)
+# FUNGSI REKOMENDASI
 # ===================================
 
 def get_anime_recommendations(anime_title, anime_data, tf_vectors, genre_vectors, genre_list, n_recommendations=5):
     """
     Mendapatkan rekomendasi anime berdasarkan anime yang dipilih
-    OPTIMASI: Hanya hitung similarity untuk anime yang dipilih (tidak precompute semua)
+    Menggunakan hybrid similarity (TF-IDF + Type Matching)
     """
+    # Cari index anime yang dipilih
     anime_index = None
     for i, anime in enumerate(anime_data):
         if anime['title'].lower() == anime_title.lower():
@@ -353,23 +359,32 @@ def get_anime_recommendations(anime_title, anime_data, tf_vectors, genre_vectors
     if anime_index is None:
         return None
     
+    # Hitung similaritas dengan semua anime lain
     selected_tfidf_vector = tf_vectors[anime_index]
     selected_genre_vector = genre_vectors[anime_index]
     
     similarities = []
     
-    # OPTIMASI: Hanya hitung untuk anime yang dibutuhkan
     for i, anime in enumerate(anime_data):
         if i != anime_index:
+            # Hitung TF-IDF similarity
             tfidf_sim = cosine_similarity(selected_tfidf_vector, tf_vectors[i])
+            
+            # Hitung Type similarity
             genre_sim = cosine_similarity(selected_genre_vector, genre_vectors[i])
+            
+            # Hitung hybrid similarity
             hybrid_sim = hybrid_similarity(tfidf_sim, genre_sim)
+            
+            # Get matching types
             matching_types = get_matching_genres(selected_genre_vector, genre_vectors[i], genre_list)
             
             similarities.append((i, hybrid_sim, anime, matching_types))
     
+    # Sort by similarity
     similarities.sort(key=lambda x: x[1], reverse=True)
     
+    # Return top-N
     recommendations = []
     for idx, sim, anime, matching_types in similarities[:n_recommendations]:
         recommendations.append({
@@ -391,34 +406,32 @@ def get_anime_recommendations(anime_title, anime_data, tf_vectors, genre_vectors
 
 def get_top_rated_anime(anime_data, n=10):
     """
-    Mendapatkan anime dengan score tertinggi
-    OPTIMASI: Batasi jumlah yang dikembalikan
+    Mendapatkan anime dengan score tertinggi dari MyAnimeList
     """
     sorted_anime = sorted(anime_data, key=lambda x: float(x['score']), reverse=True)
-    return sorted_anime[:min(n, 50)]  # Maksimal 50 untuk memory efficiency
+    return sorted_anime[:n]
 
 def filter_anime_by_type(anime_data, anime_type):
     """
-    Filter anime berdasarkan tipe
+    Filter anime berdasarkan tipe (TV, Movie, OVA, dll)
     """
     filtered = [
         anime for anime in anime_data 
         if anime_type.lower() in anime['type'].lower()
     ]
     filtered.sort(key=lambda x: float(x['score']), reverse=True)
-    return filtered[:50]  # Maksimal 50 hasil
+    return filtered
 
 def search_anime(anime_data, search_term):
     """
     Search anime berdasarkan judul atau sinopsis
-    OPTIMASI: Batasi hasil untuk performa
     """
     search_lower = search_term.lower()
     results = [
         anime for anime in anime_data
         if search_lower in anime['title'].lower() or search_lower in anime['synopsis'].lower()
     ]
-    return results[:20]  # Maksimal 20 hasil
+    return results[:10]
 
 # ===================================
 # FUNGSI DISPLAY CARD ANIME
@@ -427,9 +440,11 @@ def search_anime(anime_data, search_term):
 def display_anime_card(title, score, anime_type, episodes, synopsis, image_url=None, similarity_score=None, matching_types=None):
     """
     Display anime dalam format card yang menarik dengan gambar
+    Menampilkan matching types jika ada
     """
     col_img, col_info = st.columns([1, 3])
     
+    # Kolom gambar
     with col_img:
         if image_url:
             try:
@@ -439,9 +454,11 @@ def display_anime_card(title, score, anime_type, episodes, synopsis, image_url=N
         else:
             st.markdown("🎬", unsafe_allow_html=True)
     
+    # Kolom info
     with col_info:
         st.markdown(f"### 🎬 {title}")
         
+        # Info baris 1: Score, Type, Episodes
         info_col1, info_col2, info_col3 = st.columns(3)
         with info_col1:
             st.markdown(f'<span class="rating-badge">⭐ {score}</span>', unsafe_allow_html=True)
@@ -450,16 +467,19 @@ def display_anime_card(title, score, anime_type, episodes, synopsis, image_url=N
         with info_col3:
             st.caption(f"Episodes: {episodes if episodes else 'N/A'}")
         
+        # Matching types display
         if matching_types and len(matching_types) > 0:
             matching_html = ''.join([f'<span class="genre-tag" style="background: rgba(76, 175, 80, 0.2); border-color: #4CAF50; color: #4CAF50;">✓ {t}</span>' for t in matching_types])
             st.markdown(f'<div class="similarity-score"><strong>Tipe Sama:</strong> {matching_html}</div>', 
                        unsafe_allow_html=True)
         
+        # Similarity score jika ada
         if similarity_score is not None:
             similarity_percent = f"{(similarity_score * 100):.1f}%"
             st.markdown(f'<div class="similarity-score">📊 Kesamaan: {similarity_percent}</div>', 
                        unsafe_allow_html=True)
         
+        # Display synopsis
         st.write(f"**Sinopsis:** {synopsis[:150]}...")
 
 # ===================================
@@ -478,9 +498,8 @@ def main():
         st.error("❌ Tidak bisa load dataset. Pastikan anime.csv ada di folder yang benar.")
         return
     
-    # Build TF-IDF features (CACHED - hanya jalan sekali)
-    anime_data_tuple = tuple(anime_data)  # Convert to tuple untuk hashability
-    documents, vocabulary, tf_vectors, genre_vectors, genre_list = build_tfidf_features(anime_data_tuple)
+    # Build TF-IDF features dan genre vectors
+    documents, vocabulary, tf_vectors, genre_vectors, genre_list = build_tfidf_features(anime_data)
     
     # ===================================
     # HEADER
@@ -503,13 +522,8 @@ def main():
         )
         
         st.markdown("---")
-        st.markdown("### 📊 Database Info")
-        st.metric("📚 Total Anime", len(anime_data))
-        
-        st.markdown("---")
         if st.button("🔄 Refresh Data", use_container_width=True):
             st.cache_data.clear()
-            st.cache_resource.clear()
             st.rerun()
     
     # ===================================
@@ -534,7 +548,7 @@ def main():
             n_recommendations = st.number_input(
                 "Jumlah rekomendasi:",
                 min_value=1,
-                max_value=10,
+                max_value=20,
                 value=5
             )
         
@@ -648,6 +662,7 @@ def main():
                         st.warning("❌ Tidak ada anime yang sesuai.")
         
         with tab2:
+            # Get unique anime types from dataset
             anime_types = set()
             for anime in anime_data:
                 if anime.get('type'):
@@ -683,7 +698,7 @@ def main():
     elif page == "📊 Statistics":
         st.markdown("### 📊 Statistik Database Anime")
         
-        scores = [float(anime['score']) for anime in anime_data if anime['score']]
+        scores = [float(anime['score']) for anime in anime_data]
         
         col1, col2, col3, col4 = st.columns(4)
         
@@ -723,7 +738,7 @@ def main():
         <div style="text-align: center; color: #a0a0a0; margin-top: 2rem; padding: 1rem;">
             <p>🎌 <strong>Sistem Rekomendasi Anime</strong> 🎌</p>
             <p>Dibuat dengan ❤️ menggunakan Streamlit dan TF-IDF Cosine Similarity</p>
-            <p style="font-size: 0.9rem;">© 2026 Anime Recommender System - Content-Based Filtering (OPTIMIZED)</p>
+            <p style="font-size: 0.9rem;">© 2026 Anime Recommender System - Content-Based Filtering</p>
         </div>
     """, unsafe_allow_html=True)
 
