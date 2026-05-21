@@ -23,95 +23,127 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+# ===================================
+# GLOBAL CONNECTION MANAGER
+# ===================================
+_db_connection = None
+
+
+def _get_db_connection():
+    """
+    Get atau create database connection
+    Lebih reliable dibanding singleton pattern untuk Streamlit
+    
+    Returns:
+        mysql.connector.MySQLConnection: Database connection
+    """
+    global _db_connection
+    
+    try:
+        # Cek apakah connection existing dan masih aktif
+        if _db_connection is not None and _db_connection.is_connected():
+            return _db_connection
+        
+        # Create new connection
+        _db_connection = mysql.connector.connect(**DB_CONFIG)
+        logger.info("✓ Database connection established")
+        return _db_connection
+        
+    except Error as e:
+        logger.error(f"✗ Database connection error: {e}")
+        logger.error(f"  Config: host={DB_CONFIG.get('host')}, db={DB_CONFIG.get('database')}")
+        _db_connection = None
+        return None
+
+
+def _execute_query(query: str, params: Tuple = None, fetch_all: bool = True) -> Optional[List[Dict]]:
+    """
+    Execute SQL query dengan error handling
+    
+    Args:
+        query (str): SQL query string
+        params (tuple): Query parameters untuk prepared statement
+        fetch_all (bool): True untuk fetch all, False untuk fetch one
+        
+    Returns:
+        list or dict: Query results atau None jika error
+    """
+    connection = None
+    cursor = None
+    
+    try:
+        connection = _get_db_connection()
+        
+        if connection is None:
+            logger.error("✗ Cannot execute query: No database connection")
+            return None
+        
+        # Create cursor
+        cursor = connection.cursor(dictionary=True, buffered=True)
+        
+        # Execute query
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
+        
+        # Fetch results
+        if fetch_all:
+            results = cursor.fetchall()
+        else:
+            results = cursor.fetchone()
+        
+        return results
+        
+    except Error as e:
+        logger.error(f"✗ Query execution failed: {e}")
+        logger.error(f"  Query: {query[:100]}...")
+        if params:
+            logger.error(f"  Params: {params}")
+        return None
+        
+    finally:
+        # Always close cursor
+        if cursor is not None:
+            try:
+                cursor.close()
+            except:
+                pass
+
+
 class DatabaseConnection:
     """
-    Class untuk mengelola koneksi ke MySQL database
-    Menggunakan connection pooling untuk efisiensi
+    Legacy class untuk backward compatibility
+    Menggunakan global connection manager di belakangnya
     """
     
-    _instance = None
-    _connection = None
-    
-    def __new__(cls):
-        """Singleton pattern untuk database connection"""
-        if cls._instance is None:
-            cls._instance = super(DatabaseConnection, cls).__new__(cls)
-        return cls._instance
-    
-    def __init__(self):
-        """Initialize database connection"""
-        if self._connection is None:
-            self.connect()
-    
     def connect(self) -> bool:
-        """
-        Membuat koneksi ke database
-        
-        Returns:
-            bool: True jika berhasil connect, False jika gagal
-        """
+        """Membuat/verify koneksi ke database"""
         try:
-            self._connection = mysql.connector.connect(**DB_CONFIG)
-            logger.info("✓ Koneksi database berhasil")
-            return True
-        except Error as e:
-            logger.error(f"✗ Error koneksi database: {e}")
+            conn = _get_db_connection()
+            return conn is not None
+        except Exception as e:
+            logger.error(f"✗ Connection failed: {e}")
             return False
     
     def disconnect(self):
         """Menutup koneksi database"""
-        if self._connection:
-            self._connection.close()
-            self._connection = None
-            logger.info("✓ Koneksi database ditutup")
+        global _db_connection
+        try:
+            if _db_connection is not None:
+                _db_connection.close()
+                _db_connection = None
+                logger.info("✓ Database connection closed")
+        except:
+            pass
     
     def get_connection(self):
-        """
-        Mendapatkan koneksi aktif
-        
-        Returns:
-            mysql.connector.MySQLConnection: Koneksi database
-        """
-        if self._connection is None or not self._connection.is_connected():
-            self.connect()
-        return self._connection
+        """Get database connection"""
+        return _get_db_connection()
     
     def execute_query(self, query: str, params: Tuple = None, fetch_all: bool = True) -> Optional[List[Dict]]:
-        """
-        Execute query ke database
-        
-        Args:
-            query (str): SQL query string
-            params (tuple): Parameter untuk query (untuk prepared statement)
-            fetch_all (bool): True jika ingin fetch semua hasil
-            
-        Returns:
-            list: List of dictionaries berisi hasil query
-        """
-        try:
-            connection = self.get_connection()
-            cursor = connection.cursor(dictionary=True)
-            
-            # Execute query
-            if params:
-                cursor.execute(query, params)
-            else:
-                cursor.execute(query)
-            
-            # Fetch results
-            if fetch_all:
-                results = cursor.fetchall()
-            else:
-                results = cursor.fetchone()
-            
-            cursor.close()
-            return results
-            
-        except Error as e:
-            logger.error(f"✗ Error execute query: {e}")
-            logger.error(f"  Query: {query}")
-            logger.error(f"  Params: {params}")
-            return None
+        """Execute query using global connection manager"""
+        return _execute_query(query, params, fetch_all)
 
 
 # ===================================
@@ -126,10 +158,14 @@ def load_anime_data() -> List[Dict]:
     Returns:
         list: List of anime dictionaries
     """
-    db = DatabaseConnection()
-    animes = db.execute_query(QUERIES['load_all_animes'])
-    logger.info(f"✓ Loaded {len(animes) if animes else 0} animes from database")
-    return animes or []
+    try:
+        animes = _execute_query(QUERIES['load_all_animes'])
+        count = len(animes) if animes else 0
+        logger.info(f"✓ Loaded {count} animes from database")
+        return animes or []
+    except Exception as e:
+        logger.error(f"✗ Failed to load anime data: {e}")
+        return []
 
 
 def search_anime(keyword: str, limit: int = 50) -> List[Dict]:
@@ -144,18 +180,18 @@ def search_anime(keyword: str, limit: int = 50) -> List[Dict]:
     Returns:
         list: List of matching animes
     """
-    db = DatabaseConnection()
-    
-    # Prepare fulltext search query
-    fulltext_query = ' '.join(f'+{word}*' for word in keyword.split())
-    
-    results = db.execute_query(
-        QUERIES['search_anime'],
-        (fulltext_query, keyword, limit)
-    )
-    
-    logger.info(f"✓ Search '{keyword}' returned {len(results) if results else 0} results")
-    return results or []
+    try:
+        fulltext_query = ' '.join(f'+{word}*' for word in keyword.split())
+        results = _execute_query(
+            QUERIES['search_anime'],
+            (fulltext_query, keyword, limit)
+        )
+        count = len(results) if results else 0
+        logger.info(f"✓ Search '{keyword}' returned {count} results")
+        return results or []
+    except Exception as e:
+        logger.error(f"✗ Search failed: {e}")
+        return []
 
 
 def get_top_rated_anime(limit: int = 10) -> List[Dict]:
@@ -169,10 +205,13 @@ def get_top_rated_anime(limit: int = 10) -> List[Dict]:
     Returns:
         list: List of top rated animes
     """
-    db = DatabaseConnection()
-    results = db.execute_query(QUERIES['get_top_rated'], (limit,))
-    logger.info(f"✓ Retrieved top {limit} rated animes")
-    return results or []
+    try:
+        results = _execute_query(QUERIES['get_top_rated'], (limit,))
+        logger.info(f"✓ Retrieved top {limit} rated animes")
+        return results or []
+    except Exception as e:
+        logger.error(f"✗ Failed to get top rated anime: {e}")
+        return []
 
 
 def get_anime_by_type(anime_type: str) -> List[Dict]:
@@ -186,10 +225,14 @@ def get_anime_by_type(anime_type: str) -> List[Dict]:
     Returns:
         list: List of animes with specified type
     """
-    db = DatabaseConnection()
-    results = db.execute_query(QUERIES['get_by_type'], (anime_type,))
-    logger.info(f"✓ Retrieved {len(results) if results else 0} animes of type '{anime_type}'")
-    return results or []
+    try:
+        results = _execute_query(QUERIES['get_by_type'], (anime_type,))
+        count = len(results) if results else 0
+        logger.info(f"✓ Retrieved {count} animes of type '{anime_type}'")
+        return results or []
+    except Exception as e:
+        logger.error(f"✗ Failed to filter by type: {e}")
+        return []
 
 
 def get_anime_by_id(anime_id: int) -> Optional[Dict]:
@@ -202,13 +245,16 @@ def get_anime_by_id(anime_id: int) -> Optional[Dict]:
     Returns:
         dict: Anime data
     """
-    db = DatabaseConnection()
-    result = db.execute_query(
-        QUERIES['get_anime_by_id'],
-        (anime_id,),
-        fetch_all=False
-    )
-    return result
+    try:
+        result = _execute_query(
+            QUERIES['get_anime_by_id'],
+            (anime_id,),
+            fetch_all=False
+        )
+        return result
+    except Exception as e:
+        logger.error(f"✗ Failed to get anime by id {anime_id}: {e}")
+        return None
 
 
 def get_all_types() -> List[Dict]:
@@ -218,10 +264,14 @@ def get_all_types() -> List[Dict]:
     Returns:
         list: List of anime types
     """
-    db = DatabaseConnection()
-    results = db.execute_query(QUERIES['get_all_types'])
-    logger.info(f"✓ Retrieved {len(results) if results else 0} anime types")
-    return results or []
+    try:
+        results = _execute_query(QUERIES['get_all_types'])
+        count = len(results) if results else 0
+        logger.info(f"✓ Retrieved {count} anime types")
+        return results or []
+    except Exception as e:
+        logger.error(f"✗ Failed to get anime types: {e}")
+        return []
 
 
 def get_statistics() -> List[Dict]:
@@ -231,9 +281,12 @@ def get_statistics() -> List[Dict]:
     Returns:
         list: List of statistics
     """
-    db = DatabaseConnection()
-    results = db.execute_query(QUERIES['get_statistics'])
-    return results or []
+    try:
+        results = _execute_query(QUERIES['get_statistics'])
+        return results or []
+    except Exception as e:
+        logger.error(f"✗ Failed to get statistics: {e}")
+        return []
 
 
 def get_similar_anime(anime_id: int, score_range: float = 0.5, limit: int = 10) -> List[Dict]:
@@ -248,23 +301,24 @@ def get_similar_anime(anime_id: int, score_range: float = 0.5, limit: int = 10) 
     Returns:
         list: List of similar animes
     """
-    db = DatabaseConnection()
-    
-    # Get score dari anime referensi
-    anime = get_anime_by_id(anime_id)
-    if not anime:
+    try:
+        anime = get_anime_by_id(anime_id)
+        if not anime:
+            return []
+        
+        score = anime['score']
+        min_score = max(0, score - score_range)
+        max_score = min(10, score + score_range)
+        
+        results = _execute_query(
+            QUERIES['get_similar_score_range'],
+            (min_score, max_score, anime_id, limit)
+        )
+        
+        return results or []
+    except Exception as e:
+        logger.error(f"✗ Failed to get similar anime: {e}")
         return []
-    
-    score = anime['score']
-    min_score = max(0, score - score_range)
-    max_score = min(10, score + score_range)
-    
-    results = db.execute_query(
-        QUERIES['get_similar_score_range'],
-        (min_score, max_score, anime_id, limit)
-    )
-    
-    return results or []
 
 
 # ===================================
@@ -282,13 +336,16 @@ def log_user_activity(user_id: str, anime_id: int, activity_type: str, search_qu
         search_query (str): Query jika activity adalah search
     """
     try:
-        db = DatabaseConnection()
         query = """
         INSERT INTO user_activity (user_id, anime_id, activity_type, search_query)
         VALUES (%s, %s, %s, %s)
         """
         
-        connection = db.get_connection()
+        connection = _get_db_connection()
+        if connection is None:
+            logger.warning(f"⚠ Could not log activity: No database connection")
+            return
+        
         cursor = connection.cursor()
         cursor.execute(query, (user_id, anime_id, activity_type, search_query))
         connection.commit()
@@ -365,8 +422,6 @@ def check_database_health() -> Dict[str, any]:
     Returns:
         dict: Health status information
     """
-    db = DatabaseConnection()
-    
     health = {
         'connected': False,
         'total_animes': 0,
@@ -377,21 +432,25 @@ def check_database_health() -> Dict[str, any]:
     
     try:
         # Check connection
-        if db.get_connection().is_connected():
+        conn = _get_db_connection()
+        if conn is not None and conn.is_connected():
             health['connected'] = True
+        else:
+            health['error'] = 'Connection failed or None'
+            return health
         
         # Count animes
-        result = db.execute_query("SELECT COUNT(*) as count FROM animes", fetch_all=False)
+        result = _execute_query("SELECT COUNT(*) as count FROM animes", fetch_all=False)
         if result:
             health['total_animes'] = result['count']
         
         # Count types
-        result = db.execute_query("SELECT COUNT(*) as count FROM types", fetch_all=False)
+        result = _execute_query("SELECT COUNT(*) as count FROM types", fetch_all=False)
         if result:
             health['total_types'] = result['count']
         
         # Average score
-        result = db.execute_query("SELECT AVG(score) as avg_score FROM animes WHERE score > 0", fetch_all=False)
+        result = _execute_query("SELECT AVG(score) as avg_score FROM animes WHERE score > 0", fetch_all=False)
         if result:
             health['average_score'] = float(result['avg_score'] or 0)
         
