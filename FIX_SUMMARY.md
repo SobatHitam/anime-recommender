@@ -151,6 +151,190 @@ AttributeError: 'NoneType' object is not callable
 
 ---
 
+# 🚀 UPDATE (May 21, 2026) - RAILWAY MYSQL CONNECTION FIX
+
+## Problem Sebelumnya
+```
+Can't connect to MySQL server (110)
+Connection Timeout Error
+```
+
+**Root Cause:**
+1. ❌ `DB_PORT` di .env tapi tidak digunakan di `DB_CONFIG`
+2. ❌ Tidak ada SSL configuration untuk Railway MySQL
+3. ❌ Tidak ada connection timeout (app bisa hang)
+4. ❌ Conflicting .env entries (2 versi DB_HOST)
+5. ❌ Error messages tidak helpful untuk debugging
+
+---
+
+## ✅ Solusi yang Diterapkan
+
+### Fix #1: Add PORT to config.py
+**Before:**
+```python
+DB_CONFIG = {
+    'host': os.getenv('DB_HOST', 'localhost'),
+    # ❌ PORT MISSING!
+}
+```
+
+**After:**
+```python
+DB_CONFIG = {
+    'host': DB_HOST,
+    'port': DB_PORT,  # ✅ NOW INCLUDED
+    'user': DB_USER,
+    'password': DB_PASSWORD,
+    'database': DB_NAME,
+    'charset': 'utf8mb4',
+    'use_unicode': True,
+    'autocommit': True,
+    'connection_timeout': 10,  # ✅ PREVENT HANG
+    'ssl_disabled': False  # ✅ ENABLE SSL FOR RAILWAY
+}
+```
+
+### Fix #2: Add Streamlit Secrets Fallback
+**Before:**
+```python
+DB_CONFIG = {
+    'host': os.getenv('DB_HOST'),
+    # ❌ HANYA DARI .env
+}
+```
+
+**After:**
+```python
+try:
+    import streamlit as st
+    DB_HOST = st.secrets.get("DB_HOST", os.getenv('DB_HOST'))
+    DB_PORT = int(st.secrets.get("DB_PORT", os.getenv('DB_PORT', '3306')))
+    # ... etc
+except:
+    # Fallback ke .env jika streamlit tidak available
+    DB_HOST = os.getenv('DB_HOST')
+    DB_PORT = int(os.getenv('DB_PORT', '3306'))
+```
+
+✅ Sekarang mendukung: Production (Streamlit secrets) + Development (.env)
+
+### Fix #3: Clean .env File
+**Before:**
+```env
+#DB_HOST=mysql.railway.internal
+#DB_USER=root
+#DB_PASSWORD=...
+DB_NAME=railway
+
+DB_HOST=kodama.proxy.rlwy.net  # ❌ DUA VERSI!
+DB_USER=root
+DB_PASSWORD=...
+DB_PORT=13951
+```
+
+**After:**
+```env
+# ✅ CLEAN - HANYA 1 VERSI
+DB_HOST=kodama.proxy.rlwy.net
+DB_PORT=13951
+DB_USER=root
+DB_PASSWORD=...
+DB_NAME=railway
+```
+
+### Fix #4: Enhanced Error Logging
+**Before:**
+```python
+except Error as e:
+    logger.error(f"✗ Database connection error: {e}")
+    # ❌ TIDAK MEMBANTU
+```
+
+**After:**
+```python
+except mysql.connector.Error as e:
+    logger.error("=" * 60)
+    logger.error("🚨 DATABASE CONNECTION ERROR")
+    logger.error("=" * 60)
+    logger.error(f"Error Code: {e.errno}")
+    logger.error(f"Error Message: {e.msg}")
+    logger.error(f"Host: {DB_CONFIG.get('host')}")
+    logger.error(f"Port: {DB_CONFIG.get('port')}")
+    logger.error(f"User: {DB_CONFIG.get('user')}")
+    logger.error(f"Database: {DB_CONFIG.get('database')}")
+    logger.error("=" * 60)
+    logger.error("📋 TROUBLESHOOTING TIPS:")
+    logger.error("   - Error 110: Connection timeout (port blocked/server down)")
+    logger.error("   - Error 1045: Bad credentials (wrong password)")
+    logger.error("   - Error 2003: Can't connect (host/port wrong)")
+    logger.error("=" * 60)
+    # ✅ JELAS & ACTIONABLE
+```
+
+---
+
+## 📁 Files Modified
+
+| File | Changes |
+|------|---------|
+| `config.py` | ✅ Add port, ssl_disabled, connection_timeout, Streamlit secrets support |
+| `.env` | ✅ Remove duplicate DB_HOST entries, clean config |
+| `db_utils.py` | ✅ Enhanced error logging with error codes + troubleshooting |
+
+---
+
+## 🆕 New Utility Files
+
+| File | Purpose |
+|------|---------|
+| `test_db_connection.py` | Quick test script to verify MySQL connection |
+| `RAILWAY_CONNECTION_FIX.md` | Complete troubleshooting guide + error codes |
+
+---
+
+## 🧪 Testing Instructions
+
+1. **Run connection test:**
+   ```bash
+   python test_db_connection.py
+   ```
+   
+   Expected: ✅ ALL TESTS PASSED!
+
+2. **Verify config:**
+   ```bash
+   python -c "from config import DB_CONFIG; print(DB_CONFIG)"
+   ```
+   
+   Should show:
+   - `host: kodama.proxy.rlwy.net`
+   - `port: 13951`
+   - `ssl_disabled: False`
+   - `connection_timeout: 10`
+
+3. **Run app:**
+   ```bash
+   streamlit run app.py
+   ```
+   
+   Should see: `✅ Database connection ESTABLISHED`
+
+---
+
+## ✅ Updated Testing Checklist
+
+- [x] PORT properly configured in DB_CONFIG
+- [x] SSL enabled for Railway MySQL
+- [x] Connection timeout set to prevent hang
+- [x] .env file cleaned (no duplicate entries)
+- [x] Error logging enhanced with codes + tips
+- [x] Streamlit secrets fallback implemented
+- [x] test_db_connection.py created
+- [x] Documentation updated
+
+---
+
 ## Deploy Instructions
 
 1. **Update code:**

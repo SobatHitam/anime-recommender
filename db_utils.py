@@ -44,14 +44,33 @@ def _get_db_connection():
         if _db_connection is not None and _db_connection.is_connected():
             return _db_connection
         
-        # Create new connection
+        # Create new connection dengan error handling yang lebih baik
+        logger.info(f"⏳ Attempting to connect: {DB_CONFIG.get('host')}:{DB_CONFIG.get('port')}")
         _db_connection = mysql.connector.connect(**DB_CONFIG)
-        logger.info("✓ Database connection established")
+        logger.info("✅ Database connection ESTABLISHED")
         return _db_connection
         
-    except Error as e:
-        logger.error(f"✗ Database connection error: {e}")
-        logger.error(f"  Config: host={DB_CONFIG.get('host')}, db={DB_CONFIG.get('database')}")
+    except mysql.connector.Error as e:
+        logger.error("=" * 60)
+        logger.error("🚨 DATABASE CONNECTION ERROR")
+        logger.error("=" * 60)
+        logger.error(f"Error Code: {e.errno}")
+        logger.error(f"Error Message: {e.msg}")
+        logger.error(f"Host: {DB_CONFIG.get('host')}")
+        logger.error(f"Port: {DB_CONFIG.get('port')}")
+        logger.error(f"User: {DB_CONFIG.get('user')}")
+        logger.error(f"Database: {DB_CONFIG.get('database')}")
+        logger.error("=" * 60)
+        logger.error("📋 TROUBLESHOOTING TIPS:")
+        logger.error("   - Error 110: Connection timeout (port blocked/server down)")
+        logger.error("   - Error 1045: Bad credentials (wrong password)")
+        logger.error("   - Error 2003: Can't connect (host/port wrong)")
+        logger.error("   - Cek apakah port 13951 masih aktif di Railway")
+        logger.error("=" * 60)
+        _db_connection = None
+        return None
+    except Exception as e:
+        logger.error(f"✗ Unexpected connection error: {e}")
         _db_connection = None
         return None
 

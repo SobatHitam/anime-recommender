@@ -12,14 +12,34 @@ load_dotenv()
 # ===================================
 # KONFIGURASI DATABASE MYSQL
 # ===================================
+
+# Try load dari Streamlit secrets dulu (untuk production), fallback ke .env
+try:
+    import streamlit as st
+    DB_HOST = st.secrets.get("DB_HOST", os.getenv('DB_HOST', 'localhost'))
+    DB_PORT = int(st.secrets.get("DB_PORT", os.getenv('DB_PORT', '3306')))
+    DB_USER = st.secrets.get("DB_USER", os.getenv('DB_USER', 'root'))
+    DB_PASSWORD = st.secrets.get("DB_PASSWORD", os.getenv('DB_PASSWORD', ''))
+    DB_NAME = st.secrets.get("DB_NAME", os.getenv('DB_NAME', 'anime_recommender'))
+except:
+    # Fallback jika streamlit tidak available
+    DB_HOST = os.getenv('DB_HOST', 'localhost')
+    DB_PORT = int(os.getenv('DB_PORT', '3306'))
+    DB_USER = os.getenv('DB_USER', 'root')
+    DB_PASSWORD = os.getenv('DB_PASSWORD', '')
+    DB_NAME = os.getenv('DB_NAME', 'anime_recommender')
+
 DB_CONFIG = {
-    'host': os.getenv('DB_HOST', 'localhost'),
-    'user': os.getenv('DB_USER', 'root'),
-    'password': os.getenv('DB_PASSWORD', ''),
-    'database': os.getenv('DB_NAME', 'anime_recommender'),
+    'host': DB_HOST,
+    'port': DB_PORT,  # ✅ PENTING: Port harus terpisah dari host!
+    'user': DB_USER,
+    'password': DB_PASSWORD,
+    'database': DB_NAME,
     'charset': 'utf8mb4',
     'use_unicode': True,
-    'autocommit': True
+    'autocommit': True,
+    'connection_timeout': 10,  # ✅ Prevent hang jika network lambat
+    'ssl_disabled': False  # ✅ WAJIB untuk Railway MySQL
 }
 
 # ===================================
