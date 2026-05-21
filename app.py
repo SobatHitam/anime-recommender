@@ -5,8 +5,7 @@
 
 # Import library yang diperlukan
 import streamlit as st
-from db_utils import get_cached_anime_data
-import csv
+from data_loader import get_anime_data
 import math
 import re
 from collections import defaultdict
@@ -377,11 +376,11 @@ def display_anime_card(title, score, anime_type, episodes, synopsis, image_url=N
 def main():
     """Main app"""
     
-    # Load data
-    anime_data = get_cached_anime_data()
+    # Load data dari CSV (bukan database)
+    anime_data = get_anime_data()
     
     if not anime_data:
-        st.error("❌ Tidak bisa load dataset!")
+        st.error("❌ Tidak bisa load dataset! Pastikan anime.csv ada di folder project.")
         return
     
     # Build TF-IDF (CACHED - hanya jalan sekali!)
