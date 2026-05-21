@@ -5,6 +5,7 @@
 
 # Import library yang diperlukan
 import streamlit as st
+from db_utils import get_cached_anime_data
 import csv
 import math
 import re
@@ -139,31 +140,7 @@ st.markdown(dark_anime_style, unsafe_allow_html=True)
 # ===================================
 
 @st.cache_data(ttl=3600)
-def load_anime_data():
-    """
-    Load dataset anime dari CSV - ambil hanya kolom penting
-    """
-    anime_data = []
-    required_columns = ['anime_id', 'title', 'score', 'type', 'episodes', 'synopsis', 'image_url']
-    
-    try:
-        with open('anime.csv', 'r', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                try:
-                    filtered_row = {}
-                    for col in required_columns:
-                        if col in row:
-                            filtered_row[col] = row[col]
-                    filtered_row['score'] = float(filtered_row.get('score', 0))
-                    anime_data.append(filtered_row)
-                except:
-                    continue
-    except FileNotFoundError:
-        st.error("❌ File anime.csv tidak ditemukan!")
-        return []
-    
-    return anime_data
+
 
 @st.cache_resource
 def get_stopwords():
@@ -401,7 +378,7 @@ def main():
     """Main app"""
     
     # Load data
-    anime_data = load_anime_data()
+    anime_data = get_cached_anime_data()
     
     if not anime_data:
         st.error("❌ Tidak bisa load dataset!")
