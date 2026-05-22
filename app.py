@@ -32,7 +32,7 @@ st.set_page_config(
 )
 
 # ===================================
-# CSS CUSTOM
+# CSS CUSTOM - ENHANCED STYLING
 # ===================================
 dark_anime_style = """
 <style>
@@ -45,38 +45,71 @@ dark_anime_style = """
     --text-secondary: #a0a0a0;
 }
 
+body {
+    background-color: #0a0e27;
+}
+
 [data-testid="stMetricValue"] {
     color: #ff006e;
     font-size: 2.5rem;
+    font-weight: bold;
 }
 
 [data-testid="stMetric"] {
     background-color: rgba(255, 0, 110, 0.1);
-    padding: 1rem;
+    padding: 1.5rem;
     border-radius: 1rem;
     border: 1px solid rgba(255, 0, 110, 0.3);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+[data-testid="stMetric"]:hover {
+    background-color: rgba(255, 0, 110, 0.15);
+    border-color: rgba(255, 0, 110, 0.5);
+    box-shadow: 0 5px 20px rgba(255, 0, 110, 0.2);
 }
 
 .header-anime {
     background: linear-gradient(135deg, #ff006e 0%, #ff85c0 100%);
     color: white;
-    padding: 2rem;
-    border-radius: 1rem;
+    padding: 2.5rem;
+    border-radius: 1.5rem;
     text-align: center;
     margin-bottom: 2rem;
-    box-shadow: 0 10px 40px rgba(255, 0, 110, 0.2);
+    box-shadow: 0 15px 50px rgba(255, 0, 110, 0.3);
 }
 
 .header-anime h1 {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
     margin: 0;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
+    letter-spacing: 1px;
 }
 
 .header-anime p {
-    font-size: 1rem;
-    margin: 0.5rem 0 0 0;
-    opacity: 0.95;
+    font-size: 1.1rem;
+    margin: 0.8rem 0 0 0;
+    opacity: 0.98;
+    font-weight: 500;
+}
+
+.anime-card {
+    background: linear-gradient(135deg, rgba(26, 31, 58, 0.8) 0%, rgba(15, 20, 40, 0.9) 100%);
+    border: 1px solid rgba(255, 0, 110, 0.2);
+    padding: 1.5rem;
+    border-radius: 1rem;
+    margin: 1rem 0;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.anime-card:hover {
+    background: linear-gradient(135deg, rgba(26, 31, 58, 1) 0%, rgba(15, 20, 40, 1) 100%);
+    border-color: rgba(255, 0, 110, 0.4);
+    box-shadow: 0 12px 35px rgba(255, 0, 110, 0.2);
+    transform: translateY(-2px);
 }
 
 .title-section {
@@ -95,6 +128,8 @@ dark_anime_style = """
 
 h1, h2, h3, h4, h5, h6 {
     color: #ff006e;
+    font-weight: 700;
+    letter-spacing: 0.5px;
 }
 
 p, span {
@@ -105,18 +140,26 @@ p, span {
     display: inline-block;
     background: linear-gradient(135deg, #ff006e 0%, #ff85c0 100%);
     color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.7rem;
     font-weight: bold;
     margin: 0.5rem 0;
+    box-shadow: 0 5px 15px rgba(255, 0, 110, 0.3);
+    transition: all 0.3s ease;
+}
+
+.rating-badge:hover {
+    box-shadow: 0 8px 20px rgba(255, 0, 110, 0.5);
+    transform: scale(1.05);
 }
 
 .similarity-score {
-    background: rgba(255, 0, 110, 0.1);
-    border-left: 3px solid #ff006e;
-    padding: 0.5rem;
-    border-radius: 0.3rem;
-    margin: 0.5rem 0;
+    background: rgba(255, 0, 110, 0.15);
+    border-left: 4px solid #ff006e;
+    border-radius: 0.5rem;
+    padding: 0.8rem;
+    margin: 0.8rem 0;
+    backdrop-filter: blur(5px);
 }
 
 .genre-tag {
@@ -124,10 +167,41 @@ p, span {
     background: rgba(255, 0, 110, 0.2);
     border: 1px solid #ff85c0;
     color: #ff85c0;
-    padding: 0.3rem 0.8rem;
-    border-radius: 0.3rem;
-    margin: 0.2rem;
-    font-size: 0.9rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: 0.5rem;
+    margin: 0.3rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.genre-tag:hover {
+    background: rgba(255, 0, 110, 0.3);
+    border-color: #ff006e;
+    color: #ff006e;
+}
+
+.episode-badge {
+    display: inline-block;
+    background: rgba(76, 175, 80, 0.2);
+    border: 1px solid #4CAF50;
+    color: #4CAF50;
+    padding: 0.4rem 0.9rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+}
+
+.type-badge {
+    display: inline-block;
+    background: rgba(33, 150, 243, 0.2);
+    border: 1px solid #2196F3;
+    color: #2196F3;
+    padding: 0.4rem 0.9rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+}
+</style>
+"""
 }
 </style>
 """
@@ -135,10 +209,21 @@ p, span {
 st.markdown(dark_anime_style, unsafe_allow_html=True)
 
 # ===================================
-# FUNGSI DATA LOADING & CACHING
+# FUNGSI HELPER
 # ===================================
 
-@st.cache_data(ttl=3600)
+def format_episodes(episodes):
+    """Format episodes untuk menghapus .0"""
+    if not episodes:
+        return "N/A"
+    try:
+        ep_float = float(episodes)
+        ep_int = int(ep_float)
+        if ep_float == ep_int:
+            return str(ep_int)
+        return str(ep_float)
+    except:
+        return str(episodes)
 
 
 @st.cache_resource
@@ -368,9 +453,9 @@ def display_anime_card(title, score, anime_type, episodes, synopsis, image_url=N
         with info_col1:
             st.markdown(f'<span class="rating-badge">⭐ {score}</span>', unsafe_allow_html=True)
         with info_col2:
-            st.caption(f"Tipe: {anime_type}")
+            st.markdown(f'<span class="type-badge">🎭 {anime_type}</span>', unsafe_allow_html=True)
         with info_col3:
-            st.caption(f"Episodes: {episodes if episodes else 'N/A'}")
+            st.markdown(f'<span class="episode-badge">📺 {format_episodes(episodes)}</span>', unsafe_allow_html=True)
         
         if matching_types and len(matching_types) > 0:
             matching_html = ''.join([f'<span class="genre-tag" style="background: rgba(76, 175, 80, 0.2); border-color: #4CAF50; color: #4CAF50;">✓ {t}</span>' for t in matching_types])
@@ -425,7 +510,7 @@ def display_anime_detail_page(anime_data, anime_title):
         detail_col1, detail_col2, detail_col3 = st.columns(3)
         with detail_col1:
             st.markdown(f"### ⭐ Rating")
-            st.markdown(f"<h2 style='color: #ff006e; text-align: center;'>{selected_anime['score']}</h2>", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='color: #ff006e; text-align: center; font-size: 2.5rem;'>{selected_anime['score']}</h2>", unsafe_allow_html=True)
         
         with detail_col2:
             st.markdown(f"### 🎭 Tipe")
@@ -433,8 +518,8 @@ def display_anime_detail_page(anime_data, anime_title):
         
         with detail_col3:
             st.markdown(f"### 📺 Episodes")
-            episodes_text = selected_anime['episodes'] if selected_anime['episodes'] else "N/A"
-            st.markdown(f"<h3 style='color: #ff85c0; text-align: center;'>{episodes_text}</h3>", unsafe_allow_html=True)
+            episodes_text = format_episodes(selected_anime['episodes'])
+            st.markdown(f"<h3 style='color: #4CAF50; text-align: center; font-size: 2rem;'>{episodes_text}</h3>", unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -450,13 +535,13 @@ def display_anime_detail_page(anime_data, anime_title):
     info_col1, info_col2, info_col3 = st.columns(3)
     
     with info_col1:
-        st.metric("Tipe", selected_anime['type'])
+        st.metric("🎭 Tipe", selected_anime['type'])
     
     with info_col2:
-        st.metric("Episodes", selected_anime['episodes'] if selected_anime['episodes'] else "N/A")
+        st.metric("📺 Episodes", format_episodes(selected_anime['episodes']))
     
     with info_col3:
-        st.metric("Rating", f"{selected_anime['score']}/10")
+        st.metric("⭐ Rating", f"{selected_anime['score']}/10")
     
     st.markdown("---")
 
