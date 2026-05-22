@@ -396,26 +396,8 @@ def main():
         </div>
     """, unsafe_allow_html=True)
     
-    # Sidebar
-    with st.sidebar:
-        st.markdown("### ⚙️ Menu Navigasi")
-        page = st.radio(
-            "Pilih Halaman:",
-            ["🎯 Rekomendasi Anime", "⭐ Top Rating", "🔥 Populer", "🔍 Search & Filter", "📊 Statistics"]
-        )
-        
-        st.markdown("---")
-        st.markdown("### 📊 Database Info")
-        st.metric("📚 Total Anime", len(anime_data))
-        
-        st.markdown("---")
-        if st.button("🔄 Refresh Data", use_container_width=True):
-            st.cache_data.clear()
-            st.cache_resource.clear()
-            st.rerun()
-    
-    # PAGE 1: REKOMENDASI
-    if page == "🎯 Rekomendasi Anime":
+    # MAIN PAGE: REKOMENDASI ANIME SESUAI DOKUMENTASI DESAIN
+    if True:
         st.markdown("### 🎯 Dapatkan Rekomendasi Anime")
         st.markdown("**Metode:** Content-Based Filtering (TF-IDF + Type Matching)")
         
@@ -476,134 +458,55 @@ def main():
                             rec.get('matching_types', None)
                         )
                         st.markdown("---")
-    
-    # PAGE 2: TOP RATING
-    elif page == "⭐ Top Rating":
-        st.markdown("### ⭐ Anime Dengan Rating Tertinggi")
-        
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
-            st.write("Anime-anime dengan rating terbaik di database kami.")
-        
-        with col2:
-            n_top = st.number_input("Tampilkan", min_value=5, max_value=50, value=10)
-        
-        top_anime = get_top_rated_anime(anime_data, n_top)
-        
-        for idx, anime in enumerate(top_anime, 1):
-            medal = "🥇" if idx == 1 else "🥈" if idx == 2 else "🥉" if idx == 3 else "⭐"
-            st.markdown(f"### #{idx} {medal}")
-            display_anime_card(anime['title'], anime['score'], anime['type'], anime['episodes'], anime['synopsis'], anime.get('image_url', ''))
-            st.markdown("---")
-    
-    # PAGE 3: POPULER
-    elif page == "🔥 Populer":
-        st.markdown("### 🔥 Anime Populer")
-        
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
-            st.write("Anime populer berdasarkan rating.")
-        
-        with col2:
-            n_popular = st.number_input("Tampilkan", min_value=5, max_value=50, value=10, key="popular_num")
-        
-        popular_anime = get_top_rated_anime(anime_data, n_popular)
-        
-        for idx, anime in enumerate(popular_anime, 1):
-            st.markdown(f"### 🌟 #{idx} - {anime['title']}")
-            display_anime_card(anime['title'], anime['score'], anime['type'], anime['episodes'], anime['synopsis'], anime.get('image_url', ''))
-            st.markdown("---")
-    
-    # PAGE 4: SEARCH & FILTER
-    elif page == "🔍 Search & Filter":
-        st.markdown("### 🔍 Search dan Filter Anime")
-        
-        tab1, tab2 = st.tabs(["🔎 Search", "📂 Filter Genre"])
-        
-        with tab1:
-            search_term = st.text_input(
-                "🔍 Cari anime berdasarkan judul atau sinopsis:",
-                placeholder="Masukkan kata kunci..."
-            )
-            
-            if search_term:
-                with st.spinner("⏳ Mencari anime..."):
-                    search_results = search_anime(anime_data, search_term)
                     
-                    if search_results:
-                        st.success(f"✅ Ditemukan {len(search_results)} hasil!")
-                        for anime in search_results:
-                            display_anime_card(anime['title'], anime['score'], anime['type'], anime['episodes'], anime['synopsis'], anime.get('image_url', ''))
-                            st.markdown("---")
-                    else:
-                        st.warning("❌ Tidak ada anime yang sesuai.")
-        
-        with tab2:
-            anime_types = set()
-            for anime in anime_data:
-                if anime.get('type'):
-                    anime_types.add(anime['type'])
-            
-            anime_types = sorted(list(anime_types))
-            selected_types = st.multiselect("📂 Pilih tipe anime:", anime_types)
-            
-            if selected_types:
-                with st.spinner("⏳ Filter anime..."):
-                    filtered_anime = []
+                    # Opsi untuk melihat detail anime sesuai Activity Diagram
+                    st.markdown("#### 📖 Lihat Detail Anime")
+                    col1, col2 = st.columns([2, 1])
                     
-                    for anime_type in selected_types:
-                        filtered_anime.extend(filter_anime_by_type(anime_data, anime_type))
+                    with col1:
+                        detail_choice = st.selectbox(
+                            "Pilih anime untuk melihat detail lengkap:",
+                            [selected_anime_data['title']] + [rec['title'] for rec in recommendations],
+                            key="detail_select"
+                        )
                     
-                    seen_titles = set()
-                    unique_anime = []
-                    for anime in filtered_anime:
-                        if anime['title'] not in seen_titles:
-                            unique_anime.append(anime)
-                            seen_titles.add(anime['title'])
+                    with col2:
+                        show_detail = st.checkbox("Tampilkan Detail", key="detail_check")
                     
-                    st.success(f"✅ Ditemukan {len(unique_anime)} anime!")
-                    
-                    for anime in unique_anime:
-                        display_anime_card(anime['title'], anime['score'], anime['type'], anime['episodes'], anime['synopsis'], anime.get('image_url', ''))
+                    if show_detail and detail_choice:
                         st.markdown("---")
-    
-    # PAGE 5: STATISTICS
-    elif page == "📊 Statistics":
-        st.markdown("### 📊 Statistik Database Anime")
-        
-        scores = [float(anime['score']) for anime in anime_data if anime['score']]
-        
-        col1, col2, col3, col4 = st.columns(4)
-        
-        with col1:
-            st.metric("📚 Total Anime", len(anime_data))
-        
-        with col2:
-            avg_score = sum(scores) / len(scores) if scores else 0
-            st.metric("⭐ Score Rata-rata", f"{avg_score:.2f}")
-        
-        with col3:
-            max_score = max(scores) if scores else 0
-            st.metric("🎯 Score Tertinggi", f"{max_score:.2f}")
-        
-        with col4:
-            min_score = min(scores) if scores else 0
-            st.metric("📉 Score Terendah", f"{min_score:.2f}")
-        
-        st.markdown("---")
-        st.markdown("#### 🎭 Tipe Anime Paling Banyak")
-        
-        type_count = defaultdict(int)
-        for anime in anime_data:
-            anime_type = anime.get('type', 'Unknown')
-            type_count[anime_type] += 1
-        
-        sorted_types = sorted(type_count.items(), key=lambda x: x[1], reverse=True)
-        
-        for name, count in sorted_types[:10]:
-            st.markdown(f"- **{name}**: {count} anime")
+                        st.markdown("#### 📋 Informasi Detail Anime")
+                        
+                        detail_anime = next(
+                            (a for a in anime_data if a['title'] == detail_choice),
+                            None
+                        )
+                        
+                        if detail_anime:
+                            col1, col2 = st.columns([1, 3])
+                            
+                            with col1:
+                                if detail_anime.get('image_url'):
+                                    try:
+                                        st.image(detail_anime['image_url'], width=150, use_container_width=False)
+                                    except:
+                                        st.markdown("🎬")
+                                else:
+                                    st.markdown("🎬")
+                            
+                            with col2:
+                                st.markdown(f"### {detail_anime['title']}")
+                                
+                                detail_col1, detail_col2, detail_col3 = st.columns(3)
+                                with detail_col1:
+                                    st.markdown(f'<span class="rating-badge">⭐ Rating: {detail_anime["score"]}</span>', unsafe_allow_html=True)
+                                with detail_col2:
+                                    st.caption(f"**Tipe:** {detail_anime['type']}")
+                                with detail_col3:
+                                    st.caption(f"**Episodes:** {detail_anime['episodes'] if detail_anime['episodes'] else 'N/A'}")
+                                
+                                st.markdown("---")
+                                st.markdown(f"**📝 Sinopsis Lengkap:**\n\n{detail_anime['synopsis']}")
     
     # Footer
     st.markdown("---")
