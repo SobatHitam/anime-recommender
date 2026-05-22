@@ -24,12 +24,23 @@ except:
 # ===================================
 # KONFIGURASI HALAMAN STREAMLIT
 # ===================================
-st.set_page_config(
-    page_title="🎌 Anime Recommender",
-    page_icon="🎌",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# Set page icon - gunakan gambar dari assets jika ada
+try:
+    with open('assets/icon.png', 'rb') as icon_file:
+        icon = icon_file
+    st.set_page_config(
+        page_title="🎌 Anime Recommender",
+        page_icon=icon,
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+except:
+    st.set_page_config(
+        page_title="🎌 Anime Recommender",
+        page_icon="🎌",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
 
 # ===================================
 # CSS CUSTOM - ENHANCED STYLING
@@ -450,9 +461,9 @@ def display_anime_card(title, score, anime_type, episodes, synopsis, image_url=N
         with info_col1:
             st.markdown(f'<span class="rating-badge">⭐ {score}</span>', unsafe_allow_html=True)
         with info_col2:
-            st.markdown(f'<span class="type-badge">🎭 {anime_type}</span>', unsafe_allow_html=True)
+            st.markdown(f'<span class="type-badge"> {anime_type}</span>', unsafe_allow_html=True)
         with info_col3:
-            st.markdown(f'<span class="episode-badge">📺 {format_episodes(episodes)}</span>', unsafe_allow_html=True)
+            st.markdown(f'<span class="episode-badge"> {format_episodes(episodes)}</span>', unsafe_allow_html=True)
         
         if matching_types and len(matching_types) > 0:
             matching_html = ''.join([f'<span class="genre-tag" style="background: rgba(76, 175, 80, 0.2); border-color: #4CAF50; color: #4CAF50;">✓ {t}</span>' for t in matching_types])
@@ -487,58 +498,53 @@ def display_anime_detail_page(anime_data, anime_title):
     
     st.markdown("---")
     
-    # Header dengan gambar
-    col_img, col_info = st.columns([2, 3])
+    # Layout: Poster di kiri, Detail di kanan
+    col_img, col_info = st.columns([1.5, 2])
     
     with col_img:
+        # Poster Anime
         if selected_anime.get('image_url'):
             try:
                 st.image(selected_anime['image_url'], use_container_width=True)
             except:
-                st.markdown("## 🎬")
+                st.markdown("### 🎬")
         else:
-            st.markdown("## 🎬")
+            st.markdown("### 🎬")
     
     with col_info:
+        # Judul
         st.markdown(f"# {selected_anime['title']}")
         
-        st.markdown("---")
+        st.markdown("<div style='margin: 1.5rem 0;'>", unsafe_allow_html=True)
         
+        # Info Cards dalam satu baris
         detail_col1, detail_col2, detail_col3 = st.columns(3)
+        
         with detail_col1:
-            st.markdown(f"### ⭐ Rating")
-            st.markdown(f"<h2 style='color: #ff006e; text-align: center; font-size: 2.5rem;'>{selected_anime['score']}</h2>", unsafe_allow_html=True)
+            st.markdown("<div style='background: rgba(255, 0, 110, 0.1); padding: 1rem; border-radius: 0.8rem; text-align: center; border: 1px solid rgba(255, 0, 110, 0.3);'>", unsafe_allow_html=True)
+            st.markdown("<p style='color: #a0a0a0; font-size: 0.9rem; margin-bottom: 0.5rem;'>🎭 TIPE</p>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='color: #ff006e; margin: 0;'>{selected_anime['type']}</h3>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
         
         with detail_col2:
-            st.markdown(f"### 🎭 Tipe")
-            st.markdown(f"<h3 style='color: #ff85c0; text-align: center;'>{selected_anime['type']}</h3>", unsafe_allow_html=True)
+            st.markdown("<div style='background: rgba(76, 175, 80, 0.1); padding: 1rem; border-radius: 0.8rem; text-align: center; border: 1px solid rgba(76, 175, 80, 0.3);'>", unsafe_allow_html=True)
+            st.markdown("<p style='color: #a0a0a0; font-size: 0.9rem; margin-bottom: 0.5rem;'>📺 EPISODES</p>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='color: #4CAF50; margin: 0;'>{format_episodes(selected_anime['episodes'])}</h3>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
         
         with detail_col3:
-            st.markdown(f"### 📺 Episodes")
-            episodes_text = format_episodes(selected_anime['episodes'])
-            st.markdown(f"<h3 style='color: #4CAF50; text-align: center; font-size: 2rem;'>{episodes_text}</h3>", unsafe_allow_html=True)
+            st.markdown("<div style='background: rgba(255, 193, 7, 0.1); padding: 1rem; border-radius: 0.8rem; text-align: center; border: 1px solid rgba(255, 193, 7, 0.3);'>", unsafe_allow_html=True)
+            st.markdown("<p style='color: #a0a0a0; font-size: 0.9rem; margin-bottom: 0.5rem;'>⭐ RATING</p>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='color: #FFC107; margin: 0;'>{selected_anime['score']}/10</h3>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        st.markdown("</div>", unsafe_allow_html=True)
     
     st.markdown("---")
     
-    # Sinopsis Lengkap
+    # Sinopsis Lengkap (Full Width)
     st.markdown("## 📖 Sinopsis Lengkap")
     st.write(selected_anime['synopsis'])
-    
-    st.markdown("---")
-    
-    # Informasi Tambahan
-    st.markdown("## ℹ️ Informasi Tambahan")
-    
-    info_col1, info_col2, info_col3 = st.columns(3)
-    
-    with info_col1:
-        st.metric("🎭 Tipe", selected_anime['type'])
-    
-    with info_col2:
-        st.metric("📺 Episodes", format_episodes(selected_anime['episodes']))
-    
-    with info_col3:
-        st.metric("⭐ Rating", f"{selected_anime['score']}/10")
     
     st.markdown("---")
 
