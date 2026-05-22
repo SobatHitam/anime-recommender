@@ -202,9 +202,6 @@ p, span {
 }
 </style>
 """
-}
-</style>
-"""
 
 st.markdown(dark_anime_style, unsafe_allow_html=True)
 
