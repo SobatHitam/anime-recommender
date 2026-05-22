@@ -335,7 +335,7 @@ def search_anime(anime_data, search_term):
 # FUNGSI DISPLAY CARD
 # ===================================
 
-def display_anime_card(title, score, anime_type, episodes, synopsis, image_url=None, similarity_score=None, matching_types=None):
+def display_anime_card(title, score, anime_type, episodes, synopsis, image_url=None, similarity_score=None, matching_types=None, clickable=False):
     """Display anime card dengan gambar"""
     col_img, col_info = st.columns([1, 3])
     
@@ -349,7 +349,13 @@ def display_anime_card(title, score, anime_type, episodes, synopsis, image_url=N
             st.markdown("🎬", unsafe_allow_html=True)
     
     with col_info:
-        st.markdown(f"### 🎬 {title}")
+        if clickable:
+            if st.button(f"🎬 {title}", key=f"detail_{title}", use_container_width=False):
+                st.session_state.detail_anime = title
+                st.session_state.show_detail = True
+                st.rerun()
+        else:
+            st.markdown(f"### 🎬 {title}")
         
         info_col1, info_col2, info_col3 = st.columns(3)
         with info_col1:
@@ -370,11 +376,98 @@ def display_anime_card(title, score, anime_type, episodes, synopsis, image_url=N
         st.write(f"**Sinopsis:** {synopsis[:150]}...")
 
 # ===================================
+# FUNGSI DISPLAY DETAIL ANIME (HALAMAN BARU)
+# ===================================
+
+def display_anime_detail_page(anime_data, anime_title):
+    """Tampilkan halaman detail lengkap anime"""
+    # Cari anime berdasarkan judul
+    selected_anime = next(
+        (a for a in anime_data if a['title'] == anime_title),
+        None
+    )
+    
+    if not selected_anime:
+        st.error("❌ Anime tidak ditemukan!")
+        return
+    
+    # Button kembali
+    col1, col2 = st.columns([1, 10])
+    with col1:
+        if st.button("⬅️ Kembali", use_container_width=True):
+            st.session_state.show_detail = False
+            st.session_state.detail_anime = None
+            st.rerun()
+    
+    st.markdown("---")
+    
+    # Header dengan gambar
+    col_img, col_info = st.columns([2, 3])
+    
+    with col_img:
+        if selected_anime.get('image_url'):
+            try:
+                st.image(selected_anime['image_url'], use_container_width=True)
+            except:
+                st.markdown("## 🎬")
+        else:
+            st.markdown("## 🎬")
+    
+    with col_info:
+        st.markdown(f"# {selected_anime['title']}")
+        
+        st.markdown("---")
+        
+        detail_col1, detail_col2, detail_col3 = st.columns(3)
+        with detail_col1:
+            st.markdown(f"### ⭐ Rating")
+            st.markdown(f"<h2 style='color: #ff006e; text-align: center;'>{selected_anime['score']}</h2>", unsafe_allow_html=True)
+        
+        with detail_col2:
+            st.markdown(f"### 🎭 Tipe")
+            st.markdown(f"<h3 style='color: #ff85c0; text-align: center;'>{selected_anime['type']}</h3>", unsafe_allow_html=True)
+        
+        with detail_col3:
+            st.markdown(f"### 📺 Episodes")
+            episodes_text = selected_anime['episodes'] if selected_anime['episodes'] else "N/A"
+            st.markdown(f"<h3 style='color: #ff85c0; text-align: center;'>{episodes_text}</h3>", unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # Sinopsis Lengkap
+    st.markdown("## 📖 Sinopsis Lengkap")
+    st.write(selected_anime['synopsis'])
+    
+    st.markdown("---")
+    
+    # Informasi Tambahan
+    st.markdown("## ℹ️ Informasi Tambahan")
+    
+    info_col1, info_col2, info_col3 = st.columns(3)
+    
+    with info_col1:
+        st.metric("Tipe", selected_anime['type'])
+    
+    with info_col2:
+        st.metric("Episodes", selected_anime['episodes'] if selected_anime['episodes'] else "N/A")
+    
+    with info_col3:
+        st.metric("Rating", f"{selected_anime['score']}/10")
+    
+    st.markdown("---")
+
+# ===================================
 # MAIN APPLICATION
 # ===================================
 
 def main():
     """Main app"""
+    
+    # Initialize session state
+    if 'show_detail' not in st.session_state:
+        st.session_state.show_detail = False
+    if 'detail_anime' not in st.session_state:
+        st.session_state.detail_anime = None
     
     # Load data dari CSV (bukan database)
     anime_data = get_anime_data()
@@ -383,11 +476,6 @@ def main():
         st.error("❌ Tidak bisa load dataset! Pastikan anime.csv ada di folder project.")
         return
     
-    # Build TF-IDF (CACHED - hanya jalan sekali!)
-    with st.spinner("⏳ Memproses dataset anime..."):
-        anime_data_tuple = tuple(anime_data)
-        tfidf_matrix, genre_vectors, genre_list, tfidf_model = build_tfidf_features(anime_data_tuple)
-    
     # Header
     st.markdown("""
         <div class="header-anime">
@@ -395,6 +483,16 @@ def main():
             <p>Temukan anime favorit dengan Content-Based Filtering (sklearn TF-IDF)</p>
         </div>
     """, unsafe_allow_html=True)
+    
+    # Jika user klik untuk melihat detail, tampilkan halaman detail
+    if st.session_state.show_detail and st.session_state.detail_anime:
+        display_anime_detail_page(anime_data, st.session_state.detail_anime)
+        return
+    
+    # Build TF-IDF (CACHED - hanya jalan sekali!)
+    with st.spinner("⏳ Memproses dataset anime..."):
+        anime_data_tuple = tuple(anime_data)
+        tfidf_matrix, genre_vectors, genre_list, tfidf_model = build_tfidf_features(anime_data_tuple)
     
     # MAIN PAGE: REKOMENDASI ANIME SESUAI DOKUMENTASI DESAIN
     if True:
@@ -439,11 +537,13 @@ def main():
                             selected_anime_data['type'],
                             selected_anime_data['episodes'],
                             selected_anime_data['synopsis'],
-                            selected_anime_data.get('image_url', '')
+                            selected_anime_data.get('image_url', ''),
+                            clickable=True
                         )
                     
                     st.markdown("---")
                     st.markdown("#### 💎 Rekomendasi Untuk Anda:")
+                    st.markdown("*Klik pada judul anime untuk melihat detail lengkap*")
                     
                     for idx, rec in enumerate(recommendations, 1):
                         st.markdown(f"**#{idx}** - Kesamaan: `{(rec['similarity_score']*100):.1f}%`")
@@ -455,58 +555,10 @@ def main():
                             rec['synopsis'],
                             rec.get('image_url', ''),
                             rec.get('similarity_score', None),
-                            rec.get('matching_types', None)
+                            rec.get('matching_types', None),
+                            clickable=True
                         )
                         st.markdown("---")
-                    
-                    # Opsi untuk melihat detail anime sesuai Activity Diagram
-                    st.markdown("#### 📖 Lihat Detail Anime")
-                    col1, col2 = st.columns([2, 1])
-                    
-                    with col1:
-                        detail_choice = st.selectbox(
-                            "Pilih anime untuk melihat detail lengkap:",
-                            [selected_anime_data['title']] + [rec['title'] for rec in recommendations],
-                            key="detail_select"
-                        )
-                    
-                    with col2:
-                        show_detail = st.checkbox("Tampilkan Detail", key="detail_check")
-                    
-                    if show_detail and detail_choice:
-                        st.markdown("---")
-                        st.markdown("#### 📋 Informasi Detail Anime")
-                        
-                        detail_anime = next(
-                            (a for a in anime_data if a['title'] == detail_choice),
-                            None
-                        )
-                        
-                        if detail_anime:
-                            col1, col2 = st.columns([1, 3])
-                            
-                            with col1:
-                                if detail_anime.get('image_url'):
-                                    try:
-                                        st.image(detail_anime['image_url'], width=150, use_container_width=False)
-                                    except:
-                                        st.markdown("🎬")
-                                else:
-                                    st.markdown("🎬")
-                            
-                            with col2:
-                                st.markdown(f"### {detail_anime['title']}")
-                                
-                                detail_col1, detail_col2, detail_col3 = st.columns(3)
-                                with detail_col1:
-                                    st.markdown(f'<span class="rating-badge">⭐ Rating: {detail_anime["score"]}</span>', unsafe_allow_html=True)
-                                with detail_col2:
-                                    st.caption(f"**Tipe:** {detail_anime['type']}")
-                                with detail_col3:
-                                    st.caption(f"**Episodes:** {detail_anime['episodes'] if detail_anime['episodes'] else 'N/A'}")
-                                
-                                st.markdown("---")
-                                st.markdown(f"**📝 Sinopsis Lengkap:**\n\n{detail_anime['synopsis']}")
     
     # Footer
     st.markdown("---")
