@@ -335,6 +335,16 @@ def search_anime(anime_data, search_term):
 # FUNGSI DISPLAY CARD
 # ===================================
 
+def set_detail_anime(anime_title):
+    """Callback untuk set detail anime"""
+    st.session_state.detail_anime = anime_title
+    st.session_state.show_detail = True
+
+def go_back_to_recommendations():
+    """Callback untuk kembali ke halaman rekomendasi"""
+    st.session_state.show_detail = False
+    st.session_state.detail_anime = None
+
 def display_anime_card(title, score, anime_type, episodes, synopsis, image_url=None, similarity_score=None, matching_types=None, clickable=False):
     """Display anime card dengan gambar"""
     col_img, col_info = st.columns([1, 3])
@@ -350,10 +360,7 @@ def display_anime_card(title, score, anime_type, episodes, synopsis, image_url=N
     
     with col_info:
         if clickable:
-            if st.button(f"🎬 {title}", key=f"detail_{title}", use_container_width=False):
-                st.session_state.detail_anime = title
-                st.session_state.show_detail = True
-                st.rerun()
+            st.button(f"🎬 {title}", key=f"detail_{title}", use_container_width=False, on_click=set_detail_anime, args=(title,))
         else:
             st.markdown(f"### 🎬 {title}")
         
@@ -394,10 +401,7 @@ def display_anime_detail_page(anime_data, anime_title):
     # Button kembali
     col1, col2 = st.columns([1, 10])
     with col1:
-        if st.button("⬅️ Kembali", use_container_width=True):
-            st.session_state.show_detail = False
-            st.session_state.detail_anime = None
-            st.rerun()
+        st.button("⬅️ Kembali", use_container_width=True, on_click=go_back_to_recommendations)
     
     st.markdown("---")
     
