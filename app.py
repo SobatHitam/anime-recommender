@@ -627,22 +627,22 @@ def display_anime_detail_page(anime_data, anime_title):
     
     st.markdown("---")
     
-    # Layout: Poster di kiri (lebih besar), Detail di kanan
-    col_img, col_info = st.columns([2, 1.3], gap="large")
+    # Layout: Poster di kiri (sedang), Detail di kanan
+    col_img, col_info = st.columns([1.2, 1.5], gap="large")
     
     with col_img:
-        # Poster Anime
+        # Poster Anime dengan ukuran sedang
         if selected_anime.get('image_url'):
             try:
-                st.image(selected_anime['image_url'], use_container_width=True)
+                st.image(selected_anime['image_url'], width=250, use_container_width=False)
             except:
                 st.markdown(
-                    '<div style="width: 100%; height: 400px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 1rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 4rem;">🎬</div>',
+                    '<div style="width: 250px; height: 350px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 1rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 3rem;">🎬</div>',
                     unsafe_allow_html=True
                 )
         else:
             st.markdown(
-                '<div style="width: 100%; height: 400px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 1rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 4rem;">🎬</div>',
+                '<div style="width: 250px; height: 350px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 1rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 3rem;">🎬</div>',
                 unsafe_allow_html=True
             )
     
