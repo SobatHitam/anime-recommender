@@ -14,6 +14,8 @@ from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+from PIL import Image
+import os
 
 # Download NLTK data
 try:
@@ -26,14 +28,17 @@ except:
 # ===================================
 # Set page icon - gunakan gambar dari assets jika ada
 try:
-    with open('assets/icon.png', 'rb') as icon_file:
-        icon = icon_file
-    st.set_page_config(
-        page_title="🎌 Anime Recommender",
-        page_icon=icon,
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
+    icon_path = 'assets/icon.png'
+    if os.path.exists(icon_path):
+        icon = Image.open(icon_path)
+        st.set_page_config(
+            page_title="🎌 Anime Recommender",
+            page_icon=icon,
+            layout="wide",
+            initial_sidebar_state="expanded"
+        )
+    else:
+        raise FileNotFoundError
 except:
     st.set_page_config(
         page_title="🎌 Anime Recommender",
@@ -498,8 +503,8 @@ def display_anime_detail_page(anime_data, anime_title):
     
     st.markdown("---")
     
-    # Layout: Poster di kiri, Detail di kanan
-    col_img, col_info = st.columns([1.5, 2])
+    # Layout: Poster di kiri (lebih besar), Detail di kanan
+    col_img, col_info = st.columns([2, 1.3], gap="large")
     
     with col_img:
         # Poster Anime
@@ -513,30 +518,25 @@ def display_anime_detail_page(anime_data, anime_title):
     
     with col_info:
         # Judul
-        st.markdown(f"# {selected_anime['title']}")
+        st.markdown(f"### {selected_anime['title']}")
         
-        st.markdown("<div style='margin: 1.5rem 0;'>", unsafe_allow_html=True)
+        st.markdown("<div style='margin: 1rem 0;'>", unsafe_allow_html=True)
         
-        # Info Cards dalam satu baris
-        detail_col1, detail_col2, detail_col3 = st.columns(3)
+        # Info Cards - Label dan Value terpisah
+        st.markdown("<div style='background: rgba(255, 0, 110, 0.15); padding: 1.2rem; border-radius: 0.8rem; text-align: center; border: 1px solid rgba(255, 0, 110, 0.4); margin-bottom: 0.8rem;'>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #a0a0a0; font-size: 0.85rem; margin: 0; letter-spacing: 1px;'>🎭 TIPE</p>", unsafe_allow_html=True)
+        st.markdown(f"<h2 style='color: #ff006e; margin: 0.5rem 0 0 0; font-size: 1.3rem;'>{selected_anime['type']}</h2>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
         
-        with detail_col1:
-            st.markdown("<div style='background: rgba(255, 0, 110, 0.1); padding: 1rem; border-radius: 0.8rem; text-align: center; border: 1px solid rgba(255, 0, 110, 0.3);'>", unsafe_allow_html=True)
-            st.markdown("<p style='color: #a0a0a0; font-size: 0.9rem; margin-bottom: 0.5rem;'>🎭 TIPE</p>", unsafe_allow_html=True)
-            st.markdown(f"<h3 style='color: #ff006e; margin: 0;'>{selected_anime['type']}</h3>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("<div style='background: rgba(76, 175, 80, 0.15); padding: 1.2rem; border-radius: 0.8rem; text-align: center; border: 1px solid rgba(76, 175, 80, 0.4); margin-bottom: 0.8rem;'>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #a0a0a0; font-size: 0.85rem; margin: 0; letter-spacing: 1px;'>📺 EPISODES</p>", unsafe_allow_html=True)
+        st.markdown(f"<h2 style='color: #4CAF50; margin: 0.5rem 0 0 0; font-size: 1.3rem;'>{format_episodes(selected_anime['episodes'])}</h2>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
         
-        with detail_col2:
-            st.markdown("<div style='background: rgba(76, 175, 80, 0.1); padding: 1rem; border-radius: 0.8rem; text-align: center; border: 1px solid rgba(76, 175, 80, 0.3);'>", unsafe_allow_html=True)
-            st.markdown("<p style='color: #a0a0a0; font-size: 0.9rem; margin-bottom: 0.5rem;'>📺 EPISODES</p>", unsafe_allow_html=True)
-            st.markdown(f"<h3 style='color: #4CAF50; margin: 0;'>{format_episodes(selected_anime['episodes'])}</h3>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-        
-        with detail_col3:
-            st.markdown("<div style='background: rgba(255, 193, 7, 0.1); padding: 1rem; border-radius: 0.8rem; text-align: center; border: 1px solid rgba(255, 193, 7, 0.3);'>", unsafe_allow_html=True)
-            st.markdown("<p style='color: #a0a0a0; font-size: 0.9rem; margin-bottom: 0.5rem;'>⭐ RATING</p>", unsafe_allow_html=True)
-            st.markdown(f"<h3 style='color: #FFC107; margin: 0;'>{selected_anime['score']}/10</h3>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("<div style='background: rgba(255, 193, 7, 0.15); padding: 1.2rem; border-radius: 0.8rem; text-align: center; border: 1px solid rgba(255, 193, 7, 0.4);'>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #a0a0a0; font-size: 0.85rem; margin: 0; letter-spacing: 1px;'>⭐ RATING</p>", unsafe_allow_html=True)
+        st.markdown(f"<h2 style='color: #FFC107; margin: 0.5rem 0 0 0; font-size: 1.3rem;'>{selected_anime['score']}/10</h2>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
         
         st.markdown("</div>", unsafe_allow_html=True)
     
