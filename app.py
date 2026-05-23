@@ -48,10 +48,14 @@ except:
     )
 
 # ===================================
-# CSS CUSTOM - ENHANCED STYLING
+# CSS CUSTOM - ENHANCED STYLING (IMPROVED)
 # ===================================
 dark_anime_style = """
 <style>
+* {
+    box-sizing: border-box;
+}
+
 :root {
     --bg-primary: #0a0e27;
     --bg-secondary: #1a1f3a;
@@ -59,12 +63,17 @@ dark_anime_style = """
     --accent-light: #ff85c0;
     --text-primary: #e0e0e0;
     --text-secondary: #a0a0a0;
+    --success: #4CAF50;
+    --info: #2196F3;
+    --warning: #FFC107;
 }
 
 body {
     background-color: #0a0e27;
+    color: #e0e0e0;
 }
 
+/* ===== METRICS & INDICATORS ===== */
 [data-testid="stMetricValue"] {
     color: #ff006e;
     font-size: 2.5rem;
@@ -77,144 +86,244 @@ body {
     border-radius: 1rem;
     border: 1px solid rgba(255, 0, 110, 0.3);
     backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 [data-testid="stMetric"]:hover {
     background-color: rgba(255, 0, 110, 0.15);
     border-color: rgba(255, 0, 110, 0.5);
-    box-shadow: 0 5px 20px rgba(255, 0, 110, 0.2);
-}
-
-.header-anime {
-    background: linear-gradient(135deg, #ff006e 0%, #ff85c0 100%);
-    color: white;
-    padding: 2.5rem;
-    border-radius: 1.5rem;
-    text-align: center;
-    margin-bottom: 2rem;
-    box-shadow: 0 15px 50px rgba(255, 0, 110, 0.3);
-}
-
-.header-anime h1 {
-    font-size: 2.8rem;
-    margin: 0;
-    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
-    letter-spacing: 1px;
-}
-
-.header-anime p {
-    font-size: 1.1rem;
-    margin: 0.8rem 0 0 0;
-    opacity: 0.98;
-    font-weight: 500;
-}
-
-.anime-card {
-    background: linear-gradient(135deg, rgba(26, 31, 58, 0.8) 0%, rgba(15, 20, 40, 0.9) 100%);
-    border: 1px solid rgba(255, 0, 110, 0.2);
-    padding: 1.5rem;
-    border-radius: 1rem;
-    margin: 1rem 0;
-    backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-}
-
-.anime-card:hover {
-    background: linear-gradient(135deg, rgba(26, 31, 58, 1) 0%, rgba(15, 20, 40, 1) 100%);
-    border-color: rgba(255, 0, 110, 0.4);
-    box-shadow: 0 12px 35px rgba(255, 0, 110, 0.2);
+    box-shadow: 0 8px 24px rgba(255, 0, 110, 0.25);
     transform: translateY(-2px);
 }
 
-.title-section {
-    color: #ff006e;
-    font-size: 1.8rem;
-    font-weight: bold;
-    margin: 1.5rem 0;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid rgba(255, 0, 110, 0.3);
+/* ===== HEADER ===== */
+.header-anime {
+    background: linear-gradient(135deg, #ff006e 0%, #ff85c0 100%);
+    color: white;
+    padding: 3rem 2.5rem;
+    border-radius: 1.5rem;
+    text-align: center;
+    margin-bottom: 2.5rem;
+    box-shadow: 0 20px 60px rgba(255, 0, 110, 0.35);
+    animation: slideDown 0.6s ease-out;
 }
 
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.header-anime h1 {
+    font-size: 3rem;
+    margin: 0;
+    text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.4);
+    letter-spacing: 2px;
+    font-weight: 800;
+}
+
+.header-anime p {
+    font-size: 1.15rem;
+    margin: 1rem 0 0 0;
+    opacity: 0.95;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+/* ===== SIDEBAR ===== */
 [data-testid="stSidebar"] {
     background-color: #0f1428;
-    border-right: 2px solid rgba(255, 0, 110, 0.2);
+    border-right: 2px solid rgba(255, 0, 110, 0.25);
 }
 
+/* ===== TYPOGRAPHY ===== */
 h1, h2, h3, h4, h5, h6 {
     color: #ff006e;
     font-weight: 700;
     letter-spacing: 0.5px;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
 }
 
-p, span {
+h1 { font-size: 2.5rem; }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.5rem; }
+
+p, span, li {
     color: #e0e0e0;
+    line-height: 1.6;
 }
 
+/* ===== ANIME CARD ===== */
+.anime-card {
+    background: linear-gradient(135deg, rgba(26, 31, 58, 0.85) 0%, rgba(15, 20, 40, 0.95) 100%);
+    border: 1px solid rgba(255, 0, 110, 0.25);
+    padding: 2rem;
+    border-radius: 1.2rem;
+    margin: 1.5rem 0;
+    backdrop-filter: blur(10px);
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.anime-card:hover {
+    background: linear-gradient(135deg, rgba(26, 31, 58, 1) 0%, rgba(15, 20, 40, 1) 100%);
+    border-color: rgba(255, 0, 110, 0.5);
+    box-shadow: 0 15px 45px rgba(255, 0, 110, 0.25);
+    transform: translateY(-4px);
+}
+
+/* ===== BADGES & TAGS ===== */
 .rating-badge {
     display: inline-block;
     background: linear-gradient(135deg, #ff006e 0%, #ff85c0 100%);
     color: white;
-    padding: 0.6rem 1.2rem;
-    border-radius: 0.7rem;
-    font-weight: bold;
-    margin: 0.5rem 0;
-    box-shadow: 0 5px 15px rgba(255, 0, 110, 0.3);
-    transition: all 0.3s ease;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.8rem;
+    font-weight: 600;
+    margin: 0.6rem 0.3rem 0.6rem 0;
+    box-shadow: 0 6px 20px rgba(255, 0, 110, 0.35);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 1rem;
+    letter-spacing: 0.5px;
 }
 
 .rating-badge:hover {
-    box-shadow: 0 8px 20px rgba(255, 0, 110, 0.5);
-    transform: scale(1.05);
+    box-shadow: 0 10px 30px rgba(255, 0, 110, 0.5);
+    transform: scale(1.08) translateY(-2px);
 }
 
 .similarity-score {
-    background: rgba(255, 0, 110, 0.15);
-    border-left: 4px solid #ff006e;
-    border-radius: 0.5rem;
-    padding: 0.8rem;
-    margin: 0.8rem 0;
+    background: rgba(255, 0, 110, 0.12);
+    border-left: 5px solid #ff006e;
+    border-radius: 0.6rem;
+    padding: 1rem 1.2rem;
+    margin: 1rem 0;
     backdrop-filter: blur(5px);
+    border-top: 1px solid rgba(255, 0, 110, 0.15);
+    border-right: 1px solid rgba(255, 0, 110, 0.15);
+    border-bottom: 1px solid rgba(255, 0, 110, 0.15);
+    font-weight: 500;
+    color: #ff85c0;
 }
 
 .genre-tag {
     display: inline-block;
     background: rgba(255, 0, 110, 0.2);
-    border: 1px solid #ff85c0;
+    border: 1.5px solid #ff85c0;
     color: #ff85c0;
-    padding: 0.4rem 0.9rem;
-    border-radius: 0.5rem;
-    margin: 0.3rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.6rem;
+    margin: 0.4rem 0.3rem;
     font-size: 0.95rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    letter-spacing: 0.3px;
 }
 
 .genre-tag:hover {
-    background: rgba(255, 0, 110, 0.3);
+    background: rgba(255, 0, 110, 0.35);
     border-color: #ff006e;
-    color: #ff006e;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(255, 0, 110, 0.3);
+    transform: scale(1.05);
 }
 
 .episode-badge {
     display: inline-block;
     background: rgba(76, 175, 80, 0.2);
-    border: 1px solid #4CAF50;
+    border: 1.5px solid #4CAF50;
     color: #4CAF50;
-    padding: 0.4rem 0.9rem;
-    border-radius: 0.5rem;
-    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.6rem;
+    font-weight: 600;
+    margin: 0.6rem 0.3rem;
+    transition: all 0.3s ease;
+    letter-spacing: 0.3px;
+}
+
+.episode-badge:hover {
+    background: rgba(76, 175, 80, 0.35);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    transform: scale(1.05);
 }
 
 .type-badge {
     display: inline-block;
     background: rgba(33, 150, 243, 0.2);
-    border: 1px solid #2196F3;
+    border: 1.5px solid #2196F3;
     color: #2196F3;
-    padding: 0.4rem 0.9rem;
-    border-radius: 0.5rem;
-    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.6rem;
+    font-weight: 600;
+    margin: 0.6rem 0.3rem;
+    transition: all 0.3s ease;
+    letter-spacing: 0.3px;
+}
+
+.type-badge:hover {
+    background: rgba(33, 150, 243, 0.35);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+    transform: scale(1.05);
+}
+
+/* ===== BUTTONS ===== */
+[data-testid="stButton"] > button {
+    background: linear-gradient(135deg, #ff006e 0%, #ff85c0 100%) !important;
+    color: white !important;
+    border: none !important;
+    padding: 0.75rem 1.5rem !important;
+    border-radius: 0.8rem !important;
+    font-weight: 600 !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 6px 20px rgba(255, 0, 110, 0.3) !important;
+    letter-spacing: 0.5px !important;
+    font-size: 1rem !important;
+}
+
+[data-testid="stButton"] > button:hover {
+    box-shadow: 0 10px 30px rgba(255, 0, 110, 0.5) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* ===== INPUT ELEMENTS ===== */
+[data-testid="stSelectbox"] > div > div {
+    border-radius: 0.8rem !important;
+}
+
+[data-testid="stNumberInput"] > div > div {
+    border-radius: 0.8rem !important;
+}
+
+/* ===== DIVIDERS ===== */
+hr {
+    border: none;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255, 0, 110, 0.3), transparent);
+    margin: 2rem 0;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0a0e27;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 0, 110, 0.4);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 0, 110, 0.6);
 }
 </style>
 """
@@ -444,48 +553,63 @@ def go_back_to_recommendations():
     st.session_state.detail_anime = None
 
 def display_anime_card(title, score, anime_type, episodes, synopsis, image_url=None, similarity_score=None, matching_types=None, clickable=False):
-    """Display anime card dengan gambar"""
-    col_img, col_info = st.columns([1, 3])
+    """Display anime card dengan layout yang diperbaiki"""
+    col_img, col_info = st.columns([0.8, 2.2], gap="medium")
     
     with col_img:
         if image_url:
             try:
-                st.image(image_url, width=120, use_container_width=False)
+                st.image(image_url, width=150, use_container_width=True, caption="")
             except:
-                st.markdown("🎬", unsafe_allow_html=True)
+                st.markdown(
+                    '<div style="width: 150px; height: 220px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 3rem;">🎬</div>',
+                    unsafe_allow_html=True
+                )
         else:
-            st.markdown("🎬", unsafe_allow_html=True)
+            st.markdown(
+                '<div style="width: 150px; height: 220px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 3rem;">🎬</div>',
+                unsafe_allow_html=True
+            )
     
     with col_info:
         if clickable:
-            st.button(f"🎬 {title}", key=f"detail_{title}", use_container_width=False, on_click=set_detail_anime, args=(title,))
+            st.markdown(f'<h3 style="color: #ff006e; margin: 0 0 1rem 0; cursor: pointer;">🎬 {title}</h3>', unsafe_allow_html=True)
+            st.button(f"Lihat Detail", key=f"detail_{title}_{hash(title) % 10000}", use_container_width=False, on_click=set_detail_anime, args=(title,))
         else:
-            st.markdown(f"### 🎬 {title}")
+            st.markdown(f'<h3 style="color: #ff006e; margin: 0 0 1rem 0;">🎬 {title}</h3>', unsafe_allow_html=True)
         
-        info_col1, info_col2, info_col3 = st.columns(3)
-        with info_col1:
-            st.markdown(f'<span class="rating-badge">⭐ {score}</span>', unsafe_allow_html=True)
-        with info_col2:
-            st.markdown(f'<span class="type-badge"> {anime_type}</span>', unsafe_allow_html=True)
-        with info_col3:
-            st.markdown(f'<span class="episode-badge"> {format_episodes(episodes)}</span>', unsafe_allow_html=True)
+        # Info badges dalam satu baris
+        badge_col1, badge_col2, badge_col3 = st.columns(3, gap="small")
+        with badge_col1:
+            st.markdown(f'<div style="text-align: center; background: rgba(255, 193, 7, 0.15); padding: 0.8rem; border-radius: 0.6rem; border: 1px solid rgba(255, 193, 7, 0.4);"><span style="color: #a0a0a0; font-size: 0.8rem;">⭐ RATING</span><br><span style="color: #FFC107; font-weight: bold; font-size: 1.3rem;">{score}</span></div>', unsafe_allow_html=True)
         
+        with badge_col2:
+            st.markdown(f'<div style="text-align: center; background: rgba(33, 150, 243, 0.15); padding: 0.8rem; border-radius: 0.6rem; border: 1px solid rgba(33, 150, 243, 0.4);"><span style="color: #a0a0a0; font-size: 0.8rem;">🎭 TIPE</span><br><span style="color: #2196F3; font-weight: bold; font-size: 1.3rem;">{anime_type}</span></div>', unsafe_allow_html=True)
+        
+        with badge_col3:
+            st.markdown(f'<div style="text-align: center; background: rgba(76, 175, 80, 0.15); padding: 0.8rem; border-radius: 0.6rem; border: 1px solid rgba(76, 175, 80, 0.4);"><span style="color: #a0a0a0; font-size: 0.8rem;">📺 EP</span><br><span style="color: #4CAF50; font-weight: bold; font-size: 1.3rem;">{format_episodes(episodes)}</span></div>', unsafe_allow_html=True)
+        
+        st.markdown("<div style='margin-top: 1rem;'></div>", unsafe_allow_html=True)
+        
+        # Matching types
         if matching_types and len(matching_types) > 0:
             matching_html = ''.join([f'<span class="genre-tag" style="background: rgba(76, 175, 80, 0.2); border-color: #4CAF50; color: #4CAF50;">✓ {t}</span>' for t in matching_types])
-            st.markdown(f'<div class="similarity-score"><strong>Tipe Sama:</strong> {matching_html}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="margin-bottom: 0.8rem;"><strong style="color: #ff85c0;">✓ Tipe Cocok:</strong><br>{matching_html}</div>', unsafe_allow_html=True)
         
+        # Similarity score
         if similarity_score is not None:
             similarity_percent = f"{(similarity_score * 100):.1f}%"
-            st.markdown(f'<div class="similarity-score">📊 Kesamaan: {similarity_percent}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="similarity-score"><strong>📊 Kesamaan Konten:</strong> <span style="color: #ff006e; font-weight: bold; font-size: 1.1rem;">{similarity_percent}</span></div>', unsafe_allow_html=True)
         
-        st.write(f"**Sinopsis:** {synopsis[:150]}...")
+        # Synopsis
+        st.markdown(f'<p style="color: #a0a0a0; line-height: 1.5; margin-top: 1rem;"><strong style="color: #ff85c0;">📖 Sinopsis:</strong><br>{synopsis[:180]}...</p>', unsafe_allow_html=True)
 
 # ===================================
 # FUNGSI DISPLAY DETAIL ANIME (HALAMAN BARU)
 # ===================================
 
 def display_anime_detail_page(anime_data, anime_title):
-    """Tampilkan halaman detail lengkap anime"""
+    """Tampilkan halaman detail lengkap anime dengan layout yang diperbaiki"""
     # Cari anime berdasarkan judul
     selected_anime = next(
         (a for a in anime_data if a['title'] == anime_title),
@@ -512,31 +636,54 @@ def display_anime_detail_page(anime_data, anime_title):
             try:
                 st.image(selected_anime['image_url'], use_container_width=True)
             except:
-                st.markdown("### 🎬")
+                st.markdown(
+                    '<div style="width: 100%; height: 400px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 1rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 4rem;">🎬</div>',
+                    unsafe_allow_html=True
+                )
         else:
-            st.markdown("### 🎬")
+            st.markdown(
+                '<div style="width: 100%; height: 400px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 1rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 4rem;">🎬</div>',
+                unsafe_allow_html=True
+            )
     
     with col_info:
         # Judul
-        st.markdown(f"### {selected_anime['title']}")
+        st.markdown(f"<h2 style='color: #ff006e; margin-bottom: 1.5rem;'>🎬 {selected_anime['title']}</h2>", unsafe_allow_html=True)
         
+        # Info Cards - Label dan Value terpisah dengan styling yang lebih baik
         st.markdown("<div style='margin: 1rem 0;'>", unsafe_allow_html=True)
         
-        # Info Cards - Label dan Value terpisah
-        st.markdown("<div style='background: rgba(255, 0, 110, 0.15); padding: 1.2rem; border-radius: 0.8rem; text-align: center; border: 1px solid rgba(255, 0, 110, 0.4); margin-bottom: 0.8rem;'>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #a0a0a0; font-size: 0.85rem; margin: 0; letter-spacing: 1px;'>🎭 TIPE</p>", unsafe_allow_html=True)
-        st.markdown(f"<h2 style='color: #ff006e; margin: 0.5rem 0 0 0; font-size: 1.3rem;'>{selected_anime['type']}</h2>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        # TYPE
+        st.markdown(
+            f"""<div style='background: linear-gradient(135deg, rgba(33, 150, 243, 0.15) 0%, rgba(33, 150, 243, 0.08) 100%); 
+            padding: 1.3rem; border-radius: 0.9rem; text-align: center; border: 1.5px solid rgba(33, 150, 243, 0.4); 
+            margin-bottom: 0.9rem; transition: all 0.3s ease;'>
+            <p style='color: #a0a0a0; font-size: 0.8rem; margin: 0; letter-spacing: 1px; font-weight: 600;'>🎭 TIPE</p>
+            <h3 style='color: #2196F3; margin: 0.6rem 0 0 0; font-size: 1.5rem; font-weight: 800;'>{selected_anime['type']}</h3>
+            </div>""",
+            unsafe_allow_html=True
+        )
         
-        st.markdown("<div style='background: rgba(76, 175, 80, 0.15); padding: 1.2rem; border-radius: 0.8rem; text-align: center; border: 1px solid rgba(76, 175, 80, 0.4); margin-bottom: 0.8rem;'>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #a0a0a0; font-size: 0.85rem; margin: 0; letter-spacing: 1px;'>📺 EPISODES</p>", unsafe_allow_html=True)
-        st.markdown(f"<h2 style='color: #4CAF50; margin: 0.5rem 0 0 0; font-size: 1.3rem;'>{format_episodes(selected_anime['episodes'])}</h2>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        # EPISODES
+        st.markdown(
+            f"""<div style='background: linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(76, 175, 80, 0.08) 100%); 
+            padding: 1.3rem; border-radius: 0.9rem; text-align: center; border: 1.5px solid rgba(76, 175, 80, 0.4); 
+            margin-bottom: 0.9rem; transition: all 0.3s ease;'>
+            <p style='color: #a0a0a0; font-size: 0.8rem; margin: 0; letter-spacing: 1px; font-weight: 600;'>📺 EPISODE</p>
+            <h3 style='color: #4CAF50; margin: 0.6rem 0 0 0; font-size: 1.5rem; font-weight: 800;'>{format_episodes(selected_anime['episodes'])}</h3>
+            </div>""",
+            unsafe_allow_html=True
+        )
         
-        st.markdown("<div style='background: rgba(255, 193, 7, 0.15); padding: 1.2rem; border-radius: 0.8rem; text-align: center; border: 1px solid rgba(255, 193, 7, 0.4);'>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #a0a0a0; font-size: 0.85rem; margin: 0; letter-spacing: 1px;'>⭐ RATING</p>", unsafe_allow_html=True)
-        st.markdown(f"<h2 style='color: #FFC107; margin: 0.5rem 0 0 0; font-size: 1.3rem;'>{selected_anime['score']}/10</h2>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        # RATING
+        st.markdown(
+            f"""<div style='background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 193, 7, 0.08) 100%); 
+            padding: 1.3rem; border-radius: 0.9rem; text-align: center; border: 1.5px solid rgba(255, 193, 7, 0.4);'>
+            <p style='color: #a0a0a0; font-size: 0.8rem; margin: 0; letter-spacing: 1px; font-weight: 600;'>⭐ RATING</p>
+            <h3 style='color: #FFC107; margin: 0.6rem 0 0 0; font-size: 1.5rem; font-weight: 800;'>{selected_anime['score']}/10</h3>
+            </div>""",
+            unsafe_allow_html=True
+        )
         
         st.markdown("</div>", unsafe_allow_html=True)
     
@@ -544,7 +691,13 @@ def display_anime_detail_page(anime_data, anime_title):
     
     # Sinopsis Lengkap (Full Width)
     st.markdown("## 📖 Sinopsis Lengkap")
-    st.write(selected_anime['synopsis'])
+    st.markdown(
+        f"""<div style='background: rgba(255, 0, 110, 0.08); padding: 1.5rem; border-radius: 0.9rem; 
+        border-left: 4px solid #ff006e; line-height: 1.8; color: #e0e0e0;'>
+        {selected_anime['synopsis']}
+        </div>""",
+        unsafe_allow_html=True
+    )
     
     st.markdown("---")
 
@@ -589,16 +742,16 @@ def main():
     # MAIN PAGE: REKOMENDASI ANIME SESUAI DOKUMENTASI DESAIN
     if True:
         st.markdown("### 🎯 Dapatkan Rekomendasi Anime")
-        st.markdown("**Metode:** Content-Based Filtering (TF-IDF + Type Matching)")
+        st.markdown("**Metode:** Content-Based Filtering dengan TF-IDF + Type Matching")
         
-        col1, col2 = st.columns([2, 1])
+        col1, col2 = st.columns([2, 1], gap="medium")
         anime_titles = [anime['title'] for anime in anime_data]
         
         with col1:
             selected_anime = st.selectbox(
                 "Pilih anime favorit Anda:",
                 anime_titles,
-                help="Pilih anime untuk mendapatkan rekomendasi"
+                help="Pilih anime untuk mendapatkan rekomendasi yang mirip"
             )
         
         with col2:
@@ -606,11 +759,12 @@ def main():
                 "Jumlah rekomendasi:",
                 min_value=1,
                 max_value=10,
-                value=5
+                value=5,
+                help="Berapa banyak rekomendasi yang ingin ditampilkan?"
             )
         
         if st.button("💡 Tampilkan Rekomendasi", key="rec_button", use_container_width=True):
-            with st.spinner("⏳ Mencari rekomendasi..."):
+            with st.spinner("⏳ Mencari rekomendasi anime yang cocok..."):
                 recommendations = get_anime_recommendations(
                     selected_anime, anime_data, tfidf_matrix, genre_vectors, genre_list, n_recommendations
                 )
@@ -619,7 +773,9 @@ def main():
                     st.success("✅ Rekomendasi ditemukan!")
                     
                     st.markdown("---")
-                    st.markdown("#### 🎬 Anime yang Anda Pilih:")
+                    
+                    # Anime yang dipilih
+                    st.markdown("#### 🎬 Anime yang Anda Pilih")
                     selected_anime_data = next((a for a in anime_data if a['title'] == selected_anime), None)
                     
                     if selected_anime_data:
@@ -634,11 +790,18 @@ def main():
                         )
                     
                     st.markdown("---")
-                    st.markdown("#### 💎 Rekomendasi Untuk Anda:")
-                    st.markdown("*Klik pada judul anime untuk melihat detail lengkap*")
+                    st.markdown("#### 💎 Rekomendasi Untuk Anda")
+                    st.markdown("*Klik 'Lihat Detail' pada kartu anime untuk informasi lengkap*")
+                    st.markdown("")
                     
                     for idx, rec in enumerate(recommendations, 1):
-                        st.markdown(f"**#{idx}** - Kesamaan: `{(rec['similarity_score']*100):.1f}%`")
+                        col_num, col_sim = st.columns([3, 1])
+                        with col_num:
+                            st.markdown(f"**#{idx}** - {rec['title']}")
+                        with col_sim:
+                            sim_percent = f"{(rec['similarity_score']*100):.0f}%"
+                            st.markdown(f'<span style="background: rgba(255, 0, 110, 0.2); padding: 0.4rem 0.8rem; border-radius: 0.5rem; color: #ff85c0; font-weight: bold;">{sim_percent}</span>', unsafe_allow_html=True)
+                        
                         display_anime_card(
                             rec['title'],
                             rec['score'],
@@ -655,10 +818,11 @@ def main():
     # Footer
     st.markdown("---")
     st.markdown("""
-        <div style="text-align: center; color: #a0a0a0; margin-top: 2rem; padding: 1rem;">
-            <p>🎌 <strong>Sistem Rekomendasi Anime</strong> 🎌</p>
-            <p>Dibuat dengan ❤️ menggunakan Streamlit dan sklearn TF-IDF</p>
-            <p style="font-size: 0.9rem;">© 2026 - Content-Based Filtering (ULTRA-OPTIMIZED)</p>
+        <div style="text-align: center; color: #a0a0a0; margin-top: 3rem; padding: 2rem 1rem; border-top: 1px solid rgba(255, 0, 110, 0.15);">
+            <p style="font-size: 1.2rem; font-weight: bold; color: #ff006e; margin-bottom: 0.5rem;">🎌 Sistem Rekomendasi Anime 🎌</p>
+            <p style="margin: 0.3rem 0; color: #e0e0e0;">Temukan anime favorit dengan teknologi Content-Based Filtering</p>
+            <p style="margin: 0.5rem 0; font-size: 0.95rem;">Dibuat dengan ❤️ menggunakan <strong style="color: #ff85c0;">Streamlit</strong> & <strong style="color: #ff85c0;">sklearn TF-IDF</strong></p>
+            <p style="font-size: 0.85rem; margin-top: 1rem;">© 2026 - Content-Based Filtering (ULTRA-OPTIMIZED)</p>
         </div>
     """, unsafe_allow_html=True)
 
