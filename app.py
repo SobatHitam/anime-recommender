@@ -33,7 +33,7 @@ try:
     if os.path.exists(icon_path):
         icon = Image.open(icon_path)
         st.set_page_config(
-            page_title="🎌 Anime Recommender",
+            page_title="Anime Recommender",
             page_icon=icon,
             layout="wide",
             initial_sidebar_state="expanded"
@@ -42,7 +42,7 @@ try:
         raise FileNotFoundError
 except:
     st.set_page_config(
-        page_title="🎌 Anime Recommender",
+        page_title="Anime Recommender",
         page_icon="🎌",
         layout="wide",
         initial_sidebar_state="expanded"
