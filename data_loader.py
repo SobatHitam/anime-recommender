@@ -47,6 +47,27 @@ def get_anime_data():
         
         # Data cleaning
         df = df.fillna("")  # Replace NaN dengan empty string
+
+        # Normalisasi nama kolom agar app tetap kompatibel dengan dataset lama/baru.
+        if 'title' not in df.columns and 'name' in df.columns:
+            df['title'] = df['name']
+
+        if 'start_date' not in df.columns:
+            if 'premiered' in df.columns:
+                df['start_date'] = df['premiered']
+            else:
+                df['start_date'] = ''
+
+        optional_columns = [
+            'anime_id', 'image_url', 'synopsis', 'type', 'episodes',
+            'genres', 'themes', 'demographics', 'producers', 'studios', 'source',
+            'duration', 'rating', 'rank', 'popularity', 'members',
+            'favorites', 'scored_by', 'english_name'
+        ]
+
+        for column in optional_columns:
+            if column not in df.columns:
+                df[column] = ''
         
         # Ensure required columns
         required_columns = ['title', 'score']
@@ -66,6 +87,11 @@ def get_anime_data():
         else:
             df['episodes'] = ''
         
+        df['title'] = df['title'].astype(str)
+        df['synopsis'] = df['synopsis'].astype(str)
+        df['type'] = df['type'].astype(str)
+        df['genres'] = df['genres'].astype(str)
+
         # Convert to list of dictionaries (same format as database)
         anime_data = df.to_dict(orient='records')
         

@@ -18,9 +18,9 @@ import numpy as np
 from PIL import Image
 import os
 
-# Download NLTK data
+# Cek NLTK data tanpa memaksa download internet.
 try:
-    nltk.download('stopwords', quiet=True)
+    nltk.data.find('corpora/stopwords')
 except:
     pass
 
@@ -233,6 +233,14 @@ p, span, li {
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
 }
 
+.accuracy-badge span {
+    display: block;
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1.1;
+    opacity: 0.92;
+}
+
 .poster-meta {
     padding: 0.9rem 0.95rem 1rem;
     background: #ffffff;
@@ -336,6 +344,7 @@ p, span, li {
     font-weight: 750;
     line-height: 1.35;
     margin: 0;
+    overflow-wrap: anywhere;
 }
 
 .detail-rating {
@@ -535,15 +544,100 @@ def format_episodes(episodes):
 def get_release_year(anime):
     """Ambil tahun dari start_date jika tersedia."""
     start_date = str(anime.get('start_date', '')).strip()
-    if start_date and len(start_date) >= 4 and start_date[:4].isdigit():
-        return start_date[:4]
+    year_match = re.search(r'\b(19|20)\d{2}\b', start_date)
+    if year_match:
+        return year_match.group(0)
     return ""
+
+def format_number(value):
+    """Format angka besar agar mudah dibaca."""
+    try:
+        number = float(value)
+        if number.is_integer():
+            return f"{int(number):,}".replace(",", ".")
+        return f"{number:,.1f}".replace(",", ".")
+    except:
+        return str(value) if value not in (None, '') else "N/A"
+
+def format_rank_value(value):
+    """Format rank/popularity dengan tanda # jika datanya tersedia."""
+    formatted = format_number(value)
+    return f"#{formatted}" if formatted != "N/A" else "N/A"
+
+def get_accuracy_level(similarity_score):
+    """Ubah skor similarity menjadi tingkat akurasi yang mudah dipahami."""
+    percent = (similarity_score or 0) * 100
+    if percent >= 45:
+        return "Sangat Cocok"
+    if percent >= 30:
+        return "Cocok"
+    if percent >= 18:
+        return "Cukup Cocok"
+    return "Rendah"
+
+def split_list_field(value):
+    """Pisahkan field CSV seperti genres/themes menjadi list bersih."""
+    if not value:
+        return []
+    return [item.strip() for item in str(value).split(',') if item.strip()]
+
+def get_anime_feature_tags(anime):
+    """Gabungkan detail MAL penting untuk similarity berbasis metadata."""
+    tags = []
+    for field in ['genres', 'themes', 'demographics', 'studios']:
+        tags.extend([f"{field}:{item}" for item in split_list_field(anime.get(field, ''))])
+
+    anime_type = str(anime.get('type', '')).strip()
+    if anime_type:
+        tags.append(f"type:{anime_type}")
+
+    source = str(anime.get('source', '')).strip()
+    if source:
+        tags.append(f"source:{source}")
+
+    rating = str(anime.get('rating', '')).strip()
+    if rating:
+        tags.append(f"rating:{rating}")
+
+    year = get_release_year(anime)
+    if year:
+        tags.append(f"year:{year}")
+
+    return sorted(set(tags))
+
+def build_similarity_document(anime):
+    """Gabungkan sinopsis dan detail dataset baru untuk TF-IDF."""
+    fields = [
+        anime.get('synopsis', ''),
+        anime.get('title', ''),
+        anime.get('english_name', ''),
+        anime.get('genres', ''),
+        anime.get('genres', ''),
+        anime.get('themes', ''),
+        anime.get('themes', ''),
+        anime.get('demographics', ''),
+        anime.get('type', ''),
+        anime.get('studios', ''),
+        anime.get('producers', ''),
+        anime.get('source', ''),
+        anime.get('rating', ''),
+        anime.get('duration', ''),
+        anime.get('start_date', ''),
+    ]
+    return ' '.join(str(field) for field in fields if field)
 
 
 @st.cache_resource
 def get_stopwords():
     """Ambil stopwords bahasa Inggris"""
-    return set(stopwords.words('english'))
+    try:
+        return set(stopwords.words('english'))
+    except LookupError:
+        return {
+            'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from',
+            'has', 'he', 'in', 'is', 'it', 'its', 'of', 'on', 'that', 'the',
+            'to', 'was', 'were', 'will', 'with', 'their', 'they', 'this'
+        }
 
 # ===================================
 # FUNGSI PREPROCESSING TEXT (SIMPLIFIED - NO LEMMATIZATION)
@@ -572,21 +666,19 @@ def preprocess_text(text):
 # ===================================
 
 def extract_genres(anime_data):
-    """Extract unique types dan create binary vectors"""
-    all_types = set()
+    """Extract unique feature tags dan create binary vectors."""
+    all_tags = set()
     for anime in anime_data:
-        types_str = anime.get('type', '')
-        if types_str:
-            all_types.add(types_str)
+        all_tags.update(get_anime_feature_tags(anime))
     
-    genre_list = sorted(list(all_types))
+    genre_list = sorted(list(all_tags))
     
     genre_vectors = []
     for anime in anime_data:
+        anime_tags = set(get_anime_feature_tags(anime))
         vector = []
-        anime_type = anime.get('type', '')
         for genre in genre_list:
-            vector.append(1.0 if anime_type == genre else 0.0)
+            vector.append(1.0 if genre in anime_tags else 0.0)
         genre_vectors.append(vector)
     
     return genre_list, genre_vectors
@@ -606,8 +698,7 @@ def build_tfidf_features(anime_data_tuple):
     # Preprocess documents
     documents = []
     for anime in anime_data:
-        synopsis = anime.get('synopsis', '')
-        processed = preprocess_text(synopsis)
+        processed = preprocess_text(build_similarity_document(anime))
         documents.append(processed)
     
     # Build TF-IDF dengan sklearn
@@ -622,8 +713,8 @@ def build_tfidf_features(anime_data_tuple):
     
     return tfidf_matrix, genre_vectors, genre_list, tfidf
 
-def hybrid_similarity(tfidf_sim, genre_sim, tfidf_weight=0.7, genre_weight=0.3):
-    """Kombinasi TF-IDF dan genre similarity"""
+def hybrid_similarity(tfidf_sim, genre_sim, tfidf_weight=0.55, genre_weight=0.45):
+    """Kombinasi TF-IDF dan similarity detail metadata."""
     return (tfidf_sim * tfidf_weight) + (genre_sim * genre_weight)
 
 def cosine_sim_vectors(vec1, vec2):
@@ -656,7 +747,7 @@ def get_anime_recommendations(anime_title, anime_data, tfidf_matrix, genre_vecto
     """
     anime_index = None
     for i, anime in enumerate(anime_data):
-        if anime['title'].lower() == anime_title.lower():
+        if str(anime.get('title', '')).lower() == str(anime_title).lower():
             anime_index = i
             break
     
@@ -691,12 +782,25 @@ def get_anime_recommendations(anime_title, anime_data, tfidf_matrix, genre_vecto
     recommendations = []
     for idx, sim, anime, matching_types in similarities[:n_recommendations]:
         recommendations.append({
-            'title': anime['title'],
-            'score': anime['score'],
-            'type': anime['type'],
-            'episodes': anime['episodes'],
-            'synopsis': anime['synopsis'],
+            'title': anime.get('title', 'Tanpa Judul'),
+            'score': anime.get('score', 'N/A'),
+            'type': anime.get('type', 'N/A'),
+            'episodes': anime.get('episodes', ''),
+            'synopsis': anime.get('synopsis', ''),
             'start_date': anime.get('start_date', ''),
+            'genres': anime.get('genres', ''),
+            'themes': anime.get('themes', ''),
+            'demographics': anime.get('demographics', ''),
+            'studios': anime.get('studios', ''),
+            'producers': anime.get('producers', ''),
+            'source': anime.get('source', ''),
+            'duration': anime.get('duration', ''),
+            'rating': anime.get('rating', ''),
+            'rank': anime.get('rank', ''),
+            'popularity': anime.get('popularity', ''),
+            'members': anime.get('members', ''),
+            'favorites': anime.get('favorites', ''),
+            'scored_by': anime.get('scored_by', ''),
             'similarity_score': sim,
             'matching_types': matching_types,
             'image_url': anime.get('image_url', '')
@@ -710,16 +814,17 @@ def get_anime_recommendations(anime_title, anime_data, tfidf_matrix, genre_vecto
 
 def get_top_rated_anime(anime_data, n=10):
     """Dapatkan anime dengan score tertinggi"""
-    sorted_anime = sorted(anime_data, key=lambda x: float(x['score']), reverse=True)
+    sorted_anime = sorted(anime_data, key=lambda x: float(x.get('score', 0) or 0), reverse=True)
     return sorted_anime[:min(n, 50)]
 
 def filter_anime_by_type(anime_data, anime_type):
     """Filter berdasarkan tipe"""
     filtered = [
         anime for anime in anime_data 
-        if anime_type.lower() in anime['type'].lower()
+        if anime_type.lower() in str(anime.get('type', '')).lower()
+        or anime_type.lower() in str(anime.get('genres', '')).lower()
     ]
-    filtered.sort(key=lambda x: float(x['score']), reverse=True)
+    filtered.sort(key=lambda x: float(x.get('score', 0) or 0), reverse=True)
     return filtered[:50]
 
 def search_anime(anime_data, search_term):
@@ -727,7 +832,9 @@ def search_anime(anime_data, search_term):
     search_lower = search_term.lower()
     results = [
         anime for anime in anime_data
-        if search_lower in anime['title'].lower() or search_lower in anime['synopsis'].lower()
+        if search_lower in str(anime.get('title', '')).lower()
+        or search_lower in str(anime.get('synopsis', '')).lower()
+        or search_lower in str(anime.get('genres', '')).lower()
     ]
     return results[:20]
 
@@ -817,6 +924,7 @@ def display_recommendation_grid(recommendations, cards_per_row=5):
                 score = rec.get('score', 'N/A')
                 similarity = rec.get('similarity_score', 0) or 0
                 accuracy = f"{similarity * 100:.0f}%"
+                accuracy_level = html.escape(get_accuracy_level(similarity))
 
                 if image_url:
                     poster_html = f'<img src="{image_url}" alt="{title} poster">'
@@ -827,7 +935,7 @@ def display_recommendation_grid(recommendations, cards_per_row=5):
                     f"""
                     <div class="poster-card">
                         <div class="poster-frame">
-                            <div class="accuracy-badge">{accuracy}</div>
+                            <div class="accuracy-badge">{accuracy}<span>{accuracy_level}</span></div>
                             {poster_html}
                         </div>
                         <div class="poster-meta">
@@ -856,7 +964,7 @@ def display_recommendation_grid(recommendations, cards_per_row=5):
 def display_anime_detail_page(anime_data, anime_title):
     """Tampilkan halaman detail lengkap anime dengan layout yang diperbaiki"""
     selected_anime = next(
-        (a for a in anime_data if a['title'] == anime_title),
+        (a for a in anime_data if a.get('title') == anime_title),
         None
     )
     
@@ -868,9 +976,23 @@ def display_anime_detail_page(anime_data, anime_title):
     anime_type = html.escape(str(selected_anime.get('type', 'N/A') or 'N/A'))
     episodes = html.escape(format_episodes(selected_anime.get('episodes', '')))
     score = html.escape(str(selected_anime.get('score', 'N/A') or 'N/A'))
-    year = html.escape(get_release_year(selected_anime) or 'N/A')
     synopsis = html.escape(str(selected_anime.get('synopsis', 'Sinopsis belum tersedia.') or 'Sinopsis belum tersedia.'))
     image_url = html.escape(str(selected_anime.get('image_url', '')).strip())
+    english_name = html.escape(str(selected_anime.get('english_name', '') or 'N/A'))
+    genres = html.escape(str(selected_anime.get('genres', '') or 'N/A'))
+    themes = html.escape(str(selected_anime.get('themes', '') or 'N/A'))
+    demographics = html.escape(str(selected_anime.get('demographics', '') or 'N/A'))
+    premiered = html.escape(str(selected_anime.get('start_date', '') or 'N/A'))
+    producers = html.escape(str(selected_anime.get('producers', '') or 'N/A'))
+    studios = html.escape(str(selected_anime.get('studios', '') or 'N/A'))
+    source = html.escape(str(selected_anime.get('source', '') or 'N/A'))
+    duration = html.escape(str(selected_anime.get('duration', '') or 'N/A'))
+    age_rating = html.escape(str(selected_anime.get('rating', '') or 'N/A'))
+    rank = html.escape(format_rank_value(selected_anime.get('rank', '')))
+    popularity = html.escape(format_rank_value(selected_anime.get('popularity', '')))
+    members = html.escape(format_number(selected_anime.get('members', '')))
+    favorites = html.escape(format_number(selected_anime.get('favorites', '')))
+    scored_by = html.escape(format_number(selected_anime.get('scored_by', '')))
 
     st.button("⬅️ Kembali", use_container_width=False, on_click=go_back_to_recommendations)
     st.markdown("---")
@@ -895,6 +1017,10 @@ def display_anime_detail_page(anime_data, anime_title):
                 <h2 class="detail-title">{title}</h2>
                 <div class="detail-meta-grid">
                     <div class="detail-meta-card">
+                        <p class="detail-meta-label">English Title</p>
+                        <p class="detail-meta-value">{english_name}</p>
+                    </div>
+                    <div class="detail-meta-card">
                         <p class="detail-meta-label">Rating</p>
                         <p class="detail-meta-value detail-rating">★ {score}</p>
                     </div>
@@ -907,8 +1033,60 @@ def display_anime_detail_page(anime_data, anime_title):
                         <p class="detail-meta-value">{episodes}</p>
                     </div>
                     <div class="detail-meta-card">
-                        <p class="detail-meta-label">Tahun</p>
-                        <p class="detail-meta-value">{year}</p>
+                        <p class="detail-meta-label">Premiered</p>
+                        <p class="detail-meta-value">{premiered}</p>
+                    </div>
+                    <div class="detail-meta-card">
+                        <p class="detail-meta-label">Genre</p>
+                        <p class="detail-meta-value">{genres}</p>
+                    </div>
+                    <div class="detail-meta-card">
+                        <p class="detail-meta-label">Themes</p>
+                        <p class="detail-meta-value">{themes}</p>
+                    </div>
+                    <div class="detail-meta-card">
+                        <p class="detail-meta-label">Demographic</p>
+                        <p class="detail-meta-value">{demographics}</p>
+                    </div>
+                    <div class="detail-meta-card">
+                        <p class="detail-meta-label">Studio</p>
+                        <p class="detail-meta-value">{studios}</p>
+                    </div>
+                    <div class="detail-meta-card">
+                        <p class="detail-meta-label">Producers</p>
+                        <p class="detail-meta-value">{producers}</p>
+                    </div>
+                    <div class="detail-meta-card">
+                        <p class="detail-meta-label">Source</p>
+                        <p class="detail-meta-value">{source}</p>
+                    </div>
+                    <div class="detail-meta-card">
+                        <p class="detail-meta-label">Durasi</p>
+                        <p class="detail-meta-value">{duration}</p>
+                    </div>
+                    <div class="detail-meta-card">
+                        <p class="detail-meta-label">Age Rating</p>
+                        <p class="detail-meta-value">{age_rating}</p>
+                    </div>
+                    <div class="detail-meta-card">
+                        <p class="detail-meta-label">Rank</p>
+                        <p class="detail-meta-value">{rank}</p>
+                    </div>
+                    <div class="detail-meta-card">
+                        <p class="detail-meta-label">Popularity</p>
+                        <p class="detail-meta-value">{popularity}</p>
+                    </div>
+                    <div class="detail-meta-card">
+                        <p class="detail-meta-label">Members</p>
+                        <p class="detail-meta-value">{members}</p>
+                    </div>
+                    <div class="detail-meta-card">
+                        <p class="detail-meta-label">Favorites</p>
+                        <p class="detail-meta-value">{favorites}</p>
+                    </div>
+                    <div class="detail-meta-card">
+                        <p class="detail-meta-label">Scored By</p>
+                        <p class="detail-meta-value">{scored_by}</p>
                     </div>
                 </div>
             </div>
@@ -976,7 +1154,7 @@ def main():
         st.markdown("**Metode:** Content-Based Filtering dengan TF-IDF + Type Matching")
         
         col1, col2 = st.columns([2, 1], gap="medium")
-        anime_titles = [anime['title'] for anime in anime_data]
+        anime_titles = [anime.get('title', 'Tanpa Judul') for anime in anime_data]
         
         with col1:
             selected_anime = st.selectbox(
@@ -1009,15 +1187,15 @@ def main():
 
             # Anime yang dipilih
             st.markdown("#### Anime yang Anda Pilih")
-            selected_anime_data = next((a for a in anime_data if a['title'] == st.session_state.recommendation_source), None)
+            selected_anime_data = next((a for a in anime_data if a.get('title') == st.session_state.recommendation_source), None)
 
             if selected_anime_data:
                 display_anime_card(
-                    selected_anime_data['title'],
-                    selected_anime_data['score'],
-                    selected_anime_data['type'],
-                    selected_anime_data['episodes'],
-                    selected_anime_data['synopsis'],
+                    selected_anime_data.get('title', 'Tanpa Judul'),
+                    selected_anime_data.get('score', 'N/A'),
+                    selected_anime_data.get('type', 'N/A'),
+                    selected_anime_data.get('episodes', ''),
+                    selected_anime_data.get('synopsis', ''),
                     selected_anime_data.get('image_url', ''),
                     clickable=True
                 )
