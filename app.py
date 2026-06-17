@@ -677,7 +677,7 @@ def display_anime_card(title, score, anime_type, episodes, synopsis, image_url=N
         # Info badges dalam satu baris
         badge_col1, badge_col2, badge_col3 = st.columns(3, gap="small")
         with badge_col1:
-            st.markdown(f'<div style="text-align: center; background: rgba(255, 193, 7, 0.15); padding: 0.8rem; border-radius: 0.6rem; border: 1px solid rgba(255, 193, 7, 0.4);"><span style="color: #a0a0a0; font-size: 0.8rem;">RATING</span><br><span style="color: #FFC107; font-weight: bold; font-size: 1.3rem;">{score} ⭐</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="text-align: center; background: rgba(255, 193, 7, 0.15); padding: 0.8rem; border-radius: 0.6rem; border: 1px solid rgba(255, 193, 7, 0.4);"><span style="color: #a0a0a0; font-size: 0.8rem;">RATING</span><br><span style="color: #FFC107; font-weight: bold; font-size: 1.3rem;">{score}</span></div>', unsafe_allow_html=True)
         
         with badge_col2:
             st.markdown(f'<div style="text-align: center; background: rgba(33, 150, 243, 0.15); padding: 0.8rem; border-radius: 0.6rem; border: 1px solid rgba(33, 150, 243, 0.4);"><span style="color: #a0a0a0; font-size: 0.8rem;">TIPE</span><br><span style="color: #2196F3; font-weight: bold; font-size: 1.3rem;">{anime_type}</span></div>', unsafe_allow_html=True)
