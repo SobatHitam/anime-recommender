@@ -658,21 +658,21 @@ def display_anime_card(title, score, anime_type, episodes, synopsis, image_url=N
                 st.image(image_url, width=150, use_container_width=True, caption="")
             except:
                 st.markdown(
-                    '<div style="width: 150px; height: 220px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 3rem;">🎬</div>',
+                    '<div style="width: 150px; height: 220px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 3rem;"></div>',
                     unsafe_allow_html=True
                 )
         else:
             st.markdown(
-                '<div style="width: 150px; height: 220px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 3rem;">🎬</div>',
+                '<div style="width: 150px; height: 220px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 3rem;"></div>',
                 unsafe_allow_html=True
             )
     
     with col_info:
         if clickable:
-            st.markdown(f'<h3 style="color: #ff006e; margin: 0 0 1rem 0; cursor: pointer;">🎬 {title}</h3>', unsafe_allow_html=True)
+            st.markdown(f'<h3 style="color: #ff006e; margin: 0 0 1rem 0; cursor: pointer;">{title}</h3>', unsafe_allow_html=True)
             st.button(f"Lihat Detail", key=f"detail_{title}_{hash(title) % 10000}", use_container_width=False, on_click=set_detail_anime, args=(title,))
         else:
-            st.markdown(f'<h3 style="color: #ff006e; margin: 0 0 1rem 0;">🎬 {title}</h3>', unsafe_allow_html=True)
+            st.markdown(f'<h3 style="color: #ff006e; margin: 0 0 1rem 0;">{title}</h3>', unsafe_allow_html=True)
         
         # Info badges dalam satu baris
         badge_col1, badge_col2, badge_col3 = st.columns(3, gap="small")
@@ -724,7 +724,7 @@ def display_recommendation_grid(recommendations, cards_per_row=5):
                 if image_url:
                     poster_html = f'<img src="{image_url}" alt="{title} poster">'
                 else:
-                    poster_html = '<div class="poster-fallback">🎬</div>'
+                    poster_html = '<div class="poster-fallback"></div>'
 
                 st.markdown(
                     f"""
@@ -785,18 +785,18 @@ def display_anime_detail_page(anime_data, anime_title):
                 st.image(selected_anime['image_url'], width=180, use_container_width=False)
             except:
                 st.markdown(
-                    '<div style="width: 180px; height: 270px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 2.5rem;">🎬</div>',
+                    '<div style="width: 180px; height: 270px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 2.5rem;"></div>',
                     unsafe_allow_html=True
                 )
         else:
             st.markdown(
-                '<div style="width: 180px; height: 270px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 2.5rem;">🎬</div>',
+                '<div style="width: 180px; height: 270px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 2.5rem;"></div>',
                 unsafe_allow_html=True
             )
     
     with col_info:
         # Judul dengan ukuran lebih compact
-        st.markdown(f"<h3 style='color: #ff006e; margin: 0 0 1rem 0; font-size: 1.4rem; font-weight: 800;'>🎬 {selected_anime['title']}</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style='color: #ff006e; margin: 0 0 1rem 0; font-size: 1.4rem; font-weight: 800;'>{selected_anime['title']}</h3>", unsafe_allow_html=True)
         
         # Info Cards dalam 3 baris yang compact
         # TYPE
