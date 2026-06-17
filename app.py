@@ -680,10 +680,10 @@ def display_anime_card(title, score, anime_type, episodes, synopsis, image_url=N
             st.markdown(f'<div style="text-align: center; background: rgba(255, 193, 7, 0.15); padding: 0.8rem; border-radius: 0.6rem; border: 1px solid rgba(255, 193, 7, 0.4);"><span style="color: #a0a0a0; font-size: 0.8rem;">⭐ RATING</span><br><span style="color: #FFC107; font-weight: bold; font-size: 1.3rem;">{score}</span></div>', unsafe_allow_html=True)
         
         with badge_col2:
-            st.markdown(f'<div style="text-align: center; background: rgba(33, 150, 243, 0.15); padding: 0.8rem; border-radius: 0.6rem; border: 1px solid rgba(33, 150, 243, 0.4);"><span style="color: #a0a0a0; font-size: 0.8rem;">🎭 TIPE</span><br><span style="color: #2196F3; font-weight: bold; font-size: 1.3rem;">{anime_type}</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="text-align: center; background: rgba(33, 150, 243, 0.15); padding: 0.8rem; border-radius: 0.6rem; border: 1px solid rgba(33, 150, 243, 0.4);"><span style="color: #a0a0a0; font-size: 0.8rem;">TIPE</span><br><span style="color: #2196F3; font-weight: bold; font-size: 1.3rem;">{anime_type}</span></div>', unsafe_allow_html=True)
         
         with badge_col3:
-            st.markdown(f'<div style="text-align: center; background: rgba(76, 175, 80, 0.15); padding: 0.8rem; border-radius: 0.6rem; border: 1px solid rgba(76, 175, 80, 0.4);"><span style="color: #a0a0a0; font-size: 0.8rem;">📺 EP</span><br><span style="color: #4CAF50; font-weight: bold; font-size: 1.3rem;">{format_episodes(episodes)}</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="text-align: center; background: rgba(76, 175, 80, 0.15); padding: 0.8rem; border-radius: 0.6rem; border: 1px solid rgba(76, 175, 80, 0.4);"><span style="color: #a0a0a0; font-size: 0.8rem;">EPISODE</span><br><span style="color: #4CAF50; font-weight: bold; font-size: 1.3rem;">{format_episodes(episodes)}</span></div>', unsafe_allow_html=True)
         
         st.markdown("<div style='margin-top: 1rem;'></div>", unsafe_allow_html=True)
         
@@ -804,7 +804,7 @@ def display_anime_detail_page(anime_data, anime_title):
             f"""<div style='background: linear-gradient(135deg, rgba(33, 150, 243, 0.15) 0%, rgba(33, 150, 243, 0.08) 100%); 
             padding: 0.9rem; border-radius: 0.7rem; text-align: center; border: 1.2px solid rgba(33, 150, 243, 0.4); 
             margin-bottom: 0.7rem; transition: all 0.3s ease;'>
-            <p style='color: #a0a0a0; font-size: 0.75rem; margin: 0; letter-spacing: 0.5px; font-weight: 600;'>🎭 TIPE</p>
+            <p style='color: #a0a0a0; font-size: 0.75rem; margin: 0; letter-spacing: 0.5px; font-weight: 600;'>TIPE</p>
             <p style='color: #2196F3; margin: 0.4rem 0 0 0; font-size: 1.1rem; font-weight: 700;'>{selected_anime['type']}</p>
             </div>""",
             unsafe_allow_html=True
@@ -815,7 +815,7 @@ def display_anime_detail_page(anime_data, anime_title):
             f"""<div style='background: linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(76, 175, 80, 0.08) 100%); 
             padding: 0.9rem; border-radius: 0.7rem; text-align: center; border: 1.2px solid rgba(76, 175, 80, 0.4); 
             margin-bottom: 0.7rem; transition: all 0.3s ease;'>
-            <p style='color: #a0a0a0; font-size: 0.75rem; margin: 0; letter-spacing: 0.5px; font-weight: 600;'>📺 EPISODE</p>
+            <p style='color: #a0a0a0; font-size: 0.75rem; margin: 0; letter-spacing: 0.5px; font-weight: 600;'>EPISODE</p>
             <p style='color: #4CAF50; margin: 0.4rem 0 0 0; font-size: 1.1rem; font-weight: 700;'>{format_episodes(selected_anime['episodes'])}</p>
             </div>""",
             unsafe_allow_html=True
@@ -873,7 +873,7 @@ def main():
     st.markdown("""
         <div class="header-anime">
             <h1>🎌 Sistem Rekomendasi Anime 🎌</h1>
-            <p>Temukan anime favorit dengan Content-Based Filtering (sklearn TF-IDF)</p>
+            <p>Temukan anime favorit Anda dengan metode Content-Based Filtering</p>
         </div>
     """, unsafe_allow_html=True)
     
@@ -889,7 +889,7 @@ def main():
     
     # MAIN PAGE: REKOMENDASI ANIME SESUAI DOKUMENTASI DESAIN
     if True:
-        st.markdown("### 🎯 Dapatkan Rekomendasi Anime")
+        st.markdown("### Dapatkan Rekomendasi Anime")
         st.markdown("**Metode:** Content-Based Filtering dengan TF-IDF + Type Matching")
         
         col1, col2 = st.columns([2, 1], gap="medium")
@@ -925,7 +925,7 @@ def main():
             st.markdown("---")
 
             # Anime yang dipilih
-            st.markdown("#### 🎬 Anime yang Anda Pilih")
+            st.markdown("#### Anime yang Anda Pilih")
             selected_anime_data = next((a for a in anime_data if a['title'] == st.session_state.recommendation_source), None)
 
             if selected_anime_data:
@@ -940,7 +940,7 @@ def main():
                 )
 
             st.markdown("---")
-            st.markdown("#### 💎 Rekomendasi Untuk Anda")
+            st.markdown("#### Rekomendasi Untuk Anda")
             st.caption("Klik tombol Lihat Detail pada poster anime untuk membuka informasi lengkap.")
             display_recommendation_grid(st.session_state.recommendations)
         elif st.session_state.recommendation_source:
@@ -952,7 +952,7 @@ def main():
         <div style="text-align: center; color: #a0a0a0; margin-top: 3rem; padding: 2rem 1rem; border-top: 1px solid rgba(255, 0, 110, 0.15);">
             <p style="font-size: 1.2rem; font-weight: bold; color: #ff006e; margin-bottom: 0.5rem;">🎌 Sistem Rekomendasi Anime 🎌</p>
             <p style="margin: 0.3rem 0; color: #e0e0e0;">Temukan anime favorit dengan teknologi Content-Based Filtering</p>
-            <p style="margin: 0.5rem 0; font-size: 0.95rem;">Dibuat dengan ❤️ menggunakan <strong style="color: #ff85c0;">Streamlit</strong> & <strong style="color: #ff85c0;">sklearn TF-IDF</strong></p>
+            <p style="margin: 0.5rem 0; font-size: 0.95rem;">Dibuat dengan ❤️ menggunakan <strong style="color: #ff85c0;">Streamlit</strong></p>
             <p style="font-size: 0.85rem; margin-top: 1rem;">© 2026 - Content-Based Filtering</p>
         </div>
     """, unsafe_allow_html=True)
