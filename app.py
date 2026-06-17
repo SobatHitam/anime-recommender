@@ -1,11 +1,12 @@
 # ===================================
-# SISTEM REKOMENDASI ANIME - STREAMLIT APP (ULTRA-OPTIMIZED)
+# SISTEM REKOMENDASI ANIME - STREAMLIT APP
 # Menggunakan sklearn TF-IDF + Content-Based Filtering
 # ===================================
 
 # Import library yang diperlukan
 import streamlit as st
 from data_loader import get_anime_data
+import html
 import math
 import re
 from collections import defaultdict
@@ -178,6 +179,93 @@ p, span, li {
     transform: translateY(-4px);
 }
 
+.poster-card {
+    background: #ffffff;
+    border: 1px solid rgba(160, 160, 160, 0.35);
+    border-radius: 8px;
+    overflow: hidden;
+    min-height: 360px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.poster-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(255, 0, 110, 0.24);
+    border-color: rgba(255, 0, 110, 0.55);
+}
+
+.poster-frame {
+    position: relative;
+    aspect-ratio: 2 / 3;
+    background: rgba(255, 0, 110, 0.12);
+}
+
+.poster-frame img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.poster-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ff006e;
+    font-size: 2.6rem;
+    background: linear-gradient(135deg, rgba(255, 0, 110, 0.14), rgba(33, 150, 243, 0.12));
+}
+
+.accuracy-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 2;
+    background: linear-gradient(135deg, #ff006e 0%, #ff85c0 100%);
+    color: #ffffff;
+    padding: 0.35rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+.poster-meta {
+    padding: 0.9rem 0.95rem 1rem;
+    background: #ffffff;
+}
+
+.poster-title {
+    min-height: 3.2rem;
+    color: #333333;
+    font-size: 1rem;
+    font-weight: 650;
+    line-height: 1.35;
+    margin: 0;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.poster-submeta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    color: #777777;
+    font-size: 0.95rem;
+    margin-top: 0.45rem;
+}
+
+.poster-score {
+    color: #ff006e;
+    font-weight: 750;
+}
+
 /* ===== BADGES & TAGS ===== */
 .rating-badge {
     display: inline-block;
@@ -347,6 +435,13 @@ def format_episodes(episodes):
     except:
         return str(episodes)
 
+def get_release_year(anime):
+    """Ambil tahun dari start_date jika tersedia."""
+    start_date = str(anime.get('start_date', '')).strip()
+    if start_date and len(start_date) >= 4 and start_date[:4].isdigit():
+        return start_date[:4]
+    return ""
+
 
 @st.cache_resource
 def get_stopwords():
@@ -504,6 +599,7 @@ def get_anime_recommendations(anime_title, anime_data, tfidf_matrix, genre_vecto
             'type': anime['type'],
             'episodes': anime['episodes'],
             'synopsis': anime['synopsis'],
+            'start_date': anime.get('start_date', ''),
             'similarity_score': sim,
             'matching_types': matching_types,
             'image_url': anime.get('image_url', '')
@@ -604,6 +700,58 @@ def display_anime_card(title, score, anime_type, episodes, synopsis, image_url=N
         # Synopsis
         st.markdown(f'<p style="color: #a0a0a0; line-height: 1.5; margin-top: 1rem;"><strong style="color: #ff85c0;">📖 Sinopsis:</strong><br>{synopsis[:180]}...</p>', unsafe_allow_html=True)
 
+def display_recommendation_grid(recommendations, cards_per_row=5):
+    """Tampilkan rekomendasi sebagai grid poster ringkas."""
+    if not recommendations:
+        return
+
+    cards_per_row = max(1, min(cards_per_row, 5))
+
+    for row_start in range(0, len(recommendations), cards_per_row):
+        row_items = recommendations[row_start:row_start + cards_per_row]
+        cols = st.columns(cards_per_row, gap="small")
+
+        for offset, rec in enumerate(row_items):
+            idx = row_start + offset + 1
+            with cols[offset]:
+                title = html.escape(str(rec.get('title', 'Tanpa Judul')))
+                image_url = html.escape(str(rec.get('image_url', '')).strip())
+                year = get_release_year(rec)
+                score = rec.get('score', 'N/A')
+                similarity = rec.get('similarity_score', 0) or 0
+                accuracy = f"{similarity * 100:.0f}%"
+
+                if image_url:
+                    poster_html = f'<img src="{image_url}" alt="{title} poster">'
+                else:
+                    poster_html = '<div class="poster-fallback">🎬</div>'
+
+                st.markdown(
+                    f"""
+                    <div class="poster-card">
+                        <div class="poster-frame">
+                            <div class="accuracy-badge">{accuracy}</div>
+                            {poster_html}
+                        </div>
+                        <div class="poster-meta">
+                            <p class="poster-title">{title}</p>
+                            <div class="poster-submeta">
+                                <span>{html.escape(year) if year else 'Tahun N/A'}</span>
+                                <span class="poster-score">★ {score}</span>
+                            </div>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+                st.button(
+                    "Lihat Detail",
+                    key=f"poster_detail_{idx}_{hash(rec.get('title', '')) % 100000}",
+                    use_container_width=True,
+                    on_click=set_detail_anime,
+                    args=(rec.get('title', ''),)
+                )
+
 # ===================================
 # FUNGSI DISPLAY DETAIL ANIME (HALAMAN BARU)
 # ===================================
@@ -627,39 +775,37 @@ def display_anime_detail_page(anime_data, anime_title):
     
     st.markdown("---")
     
-    # Layout: Poster di kiri (sedang), Detail di kanan
-    col_img, col_info = st.columns([1.2, 1.5], gap="large")
+    # Layout: Poster di kiri (sedang), Detail di kanan dengan ukuran yang sesuai
+    col_img, col_info = st.columns([0.95, 1.8], gap="medium")
     
     with col_img:
         # Poster Anime dengan ukuran sedang
         if selected_anime.get('image_url'):
             try:
-                st.image(selected_anime['image_url'], width=250, use_container_width=False)
+                st.image(selected_anime['image_url'], width=180, use_container_width=False)
             except:
                 st.markdown(
-                    '<div style="width: 250px; height: 350px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 1rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 3rem;">🎬</div>',
+                    '<div style="width: 180px; height: 270px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 2.5rem;">🎬</div>',
                     unsafe_allow_html=True
                 )
         else:
             st.markdown(
-                '<div style="width: 250px; height: 350px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 1rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 3rem;">🎬</div>',
+                '<div style="width: 180px; height: 270px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 2.5rem;">🎬</div>',
                 unsafe_allow_html=True
             )
     
     with col_info:
-        # Judul
-        st.markdown(f"<h2 style='color: #ff006e; margin-bottom: 1.5rem;'>🎬 {selected_anime['title']}</h2>", unsafe_allow_html=True)
+        # Judul dengan ukuran lebih compact
+        st.markdown(f"<h3 style='color: #ff006e; margin: 0 0 1rem 0; font-size: 1.4rem; font-weight: 800;'>🎬 {selected_anime['title']}</h3>", unsafe_allow_html=True)
         
-        # Info Cards - Label dan Value terpisah dengan styling yang lebih baik
-        st.markdown("<div style='margin: 1rem 0;'>", unsafe_allow_html=True)
-        
+        # Info Cards dalam 3 baris yang compact
         # TYPE
         st.markdown(
             f"""<div style='background: linear-gradient(135deg, rgba(33, 150, 243, 0.15) 0%, rgba(33, 150, 243, 0.08) 100%); 
-            padding: 1.3rem; border-radius: 0.9rem; text-align: center; border: 1.5px solid rgba(33, 150, 243, 0.4); 
-            margin-bottom: 0.9rem; transition: all 0.3s ease;'>
-            <p style='color: #a0a0a0; font-size: 0.8rem; margin: 0; letter-spacing: 1px; font-weight: 600;'>🎭 TIPE</p>
-            <h3 style='color: #2196F3; margin: 0.6rem 0 0 0; font-size: 1.5rem; font-weight: 800;'>{selected_anime['type']}</h3>
+            padding: 0.9rem; border-radius: 0.7rem; text-align: center; border: 1.2px solid rgba(33, 150, 243, 0.4); 
+            margin-bottom: 0.7rem; transition: all 0.3s ease;'>
+            <p style='color: #a0a0a0; font-size: 0.75rem; margin: 0; letter-spacing: 0.5px; font-weight: 600;'>🎭 TIPE</p>
+            <p style='color: #2196F3; margin: 0.4rem 0 0 0; font-size: 1.1rem; font-weight: 700;'>{selected_anime['type']}</p>
             </div>""",
             unsafe_allow_html=True
         )
@@ -667,10 +813,10 @@ def display_anime_detail_page(anime_data, anime_title):
         # EPISODES
         st.markdown(
             f"""<div style='background: linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(76, 175, 80, 0.08) 100%); 
-            padding: 1.3rem; border-radius: 0.9rem; text-align: center; border: 1.5px solid rgba(76, 175, 80, 0.4); 
-            margin-bottom: 0.9rem; transition: all 0.3s ease;'>
-            <p style='color: #a0a0a0; font-size: 0.8rem; margin: 0; letter-spacing: 1px; font-weight: 600;'>📺 EPISODE</p>
-            <h3 style='color: #4CAF50; margin: 0.6rem 0 0 0; font-size: 1.5rem; font-weight: 800;'>{format_episodes(selected_anime['episodes'])}</h3>
+            padding: 0.9rem; border-radius: 0.7rem; text-align: center; border: 1.2px solid rgba(76, 175, 80, 0.4); 
+            margin-bottom: 0.7rem; transition: all 0.3s ease;'>
+            <p style='color: #a0a0a0; font-size: 0.75rem; margin: 0; letter-spacing: 0.5px; font-weight: 600;'>📺 EPISODE</p>
+            <p style='color: #4CAF50; margin: 0.4rem 0 0 0; font-size: 1.1rem; font-weight: 700;'>{format_episodes(selected_anime['episodes'])}</p>
             </div>""",
             unsafe_allow_html=True
         )
@@ -678,14 +824,12 @@ def display_anime_detail_page(anime_data, anime_title):
         # RATING
         st.markdown(
             f"""<div style='background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 193, 7, 0.08) 100%); 
-            padding: 1.3rem; border-radius: 0.9rem; text-align: center; border: 1.5px solid rgba(255, 193, 7, 0.4);'>
-            <p style='color: #a0a0a0; font-size: 0.8rem; margin: 0; letter-spacing: 1px; font-weight: 600;'>⭐ RATING</p>
-            <h3 style='color: #FFC107; margin: 0.6rem 0 0 0; font-size: 1.5rem; font-weight: 800;'>{selected_anime['score']}/10</h3>
+            padding: 0.9rem; border-radius: 0.7rem; text-align: center; border: 1.2px solid rgba(255, 193, 7, 0.4);'>
+            <p style='color: #a0a0a0; font-size: 0.75rem; margin: 0; letter-spacing: 0.5px; font-weight: 600;'>⭐ RATING</p>
+            <p style='color: #FFC107; margin: 0.4rem 0 0 0; font-size: 1.1rem; font-weight: 700;'>{selected_anime['score']}/10</p>
             </div>""",
             unsafe_allow_html=True
         )
-        
-        st.markdown("</div>", unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -713,6 +857,10 @@ def main():
         st.session_state.show_detail = False
     if 'detail_anime' not in st.session_state:
         st.session_state.detail_anime = None
+    if 'recommendations' not in st.session_state:
+        st.session_state.recommendations = []
+    if 'recommendation_source' not in st.session_state:
+        st.session_state.recommendation_source = None
     
     # Load data dari CSV (bukan database)
     anime_data = get_anime_data()
@@ -768,52 +916,35 @@ def main():
                 recommendations = get_anime_recommendations(
                     selected_anime, anime_data, tfidf_matrix, genre_vectors, genre_list, n_recommendations
                 )
-                
-                if recommendations:
-                    st.success("✅ Rekomendasi ditemukan!")
-                    
-                    st.markdown("---")
-                    
-                    # Anime yang dipilih
-                    st.markdown("#### 🎬 Anime yang Anda Pilih")
-                    selected_anime_data = next((a for a in anime_data if a['title'] == selected_anime), None)
-                    
-                    if selected_anime_data:
-                        display_anime_card(
-                            selected_anime_data['title'],
-                            selected_anime_data['score'],
-                            selected_anime_data['type'],
-                            selected_anime_data['episodes'],
-                            selected_anime_data['synopsis'],
-                            selected_anime_data.get('image_url', ''),
-                            clickable=True
-                        )
-                    
-                    st.markdown("---")
-                    st.markdown("#### 💎 Rekomendasi Untuk Anda")
-                    st.markdown("*Klik 'Lihat Detail' pada kartu anime untuk informasi lengkap*")
-                    st.markdown("")
-                    
-                    for idx, rec in enumerate(recommendations, 1):
-                        col_num, col_sim = st.columns([3, 1])
-                        with col_num:
-                            st.markdown(f"**#{idx}** - {rec['title']}")
-                        with col_sim:
-                            sim_percent = f"{(rec['similarity_score']*100):.0f}%"
-                            st.markdown(f'<span style="background: rgba(255, 0, 110, 0.2); padding: 0.4rem 0.8rem; border-radius: 0.5rem; color: #ff85c0; font-weight: bold;">{sim_percent}</span>', unsafe_allow_html=True)
-                        
-                        display_anime_card(
-                            rec['title'],
-                            rec['score'],
-                            rec['type'],
-                            rec['episodes'],
-                            rec['synopsis'],
-                            rec.get('image_url', ''),
-                            rec.get('similarity_score', None),
-                            rec.get('matching_types', None),
-                            clickable=True
-                        )
-                        st.markdown("---")
+                st.session_state.recommendations = recommendations or []
+                st.session_state.recommendation_source = selected_anime
+
+        if st.session_state.recommendations:
+            st.success("✅ Rekomendasi ditemukan!")
+
+            st.markdown("---")
+
+            # Anime yang dipilih
+            st.markdown("#### 🎬 Anime yang Anda Pilih")
+            selected_anime_data = next((a for a in anime_data if a['title'] == st.session_state.recommendation_source), None)
+
+            if selected_anime_data:
+                display_anime_card(
+                    selected_anime_data['title'],
+                    selected_anime_data['score'],
+                    selected_anime_data['type'],
+                    selected_anime_data['episodes'],
+                    selected_anime_data['synopsis'],
+                    selected_anime_data.get('image_url', ''),
+                    clickable=True
+                )
+
+            st.markdown("---")
+            st.markdown("#### 💎 Rekomendasi Untuk Anda")
+            st.caption("Klik tombol Lihat Detail pada poster anime untuk membuka informasi lengkap.")
+            display_recommendation_grid(st.session_state.recommendations)
+        elif st.session_state.recommendation_source:
+            st.warning("Rekomendasi belum ditemukan untuk anime tersebut.")
     
     # Footer
     st.markdown("---")
@@ -822,7 +953,7 @@ def main():
             <p style="font-size: 1.2rem; font-weight: bold; color: #ff006e; margin-bottom: 0.5rem;">🎌 Sistem Rekomendasi Anime 🎌</p>
             <p style="margin: 0.3rem 0; color: #e0e0e0;">Temukan anime favorit dengan teknologi Content-Based Filtering</p>
             <p style="margin: 0.5rem 0; font-size: 0.95rem;">Dibuat dengan ❤️ menggunakan <strong style="color: #ff85c0;">Streamlit</strong> & <strong style="color: #ff85c0;">sklearn TF-IDF</strong></p>
-            <p style="font-size: 0.85rem; margin-top: 1rem;">© 2026 - Content-Based Filtering (ULTRA-OPTIMIZED)</p>
+            <p style="font-size: 0.85rem; margin-top: 1rem;">© 2026 - Content-Based Filtering</p>
         </div>
     """, unsafe_allow_html=True)
 
