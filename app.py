@@ -266,6 +266,103 @@ p, span, li {
     font-weight: 750;
 }
 
+.detail-shell {
+    background: linear-gradient(135deg, rgba(26, 31, 58, 0.92), rgba(15, 20, 40, 0.98));
+    border: 1px solid rgba(255, 0, 110, 0.28);
+    border-radius: 1rem;
+    padding: 1.35rem;
+    box-shadow: 0 16px 44px rgba(0, 0, 0, 0.35);
+}
+
+.detail-title {
+    color: #ffffff;
+    font-size: 2rem;
+    line-height: 1.18;
+    font-weight: 800;
+    margin: 0 0 0.8rem;
+}
+
+.detail-poster {
+    width: 100%;
+    max-width: 260px;
+    aspect-ratio: 2 / 3;
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: 0.8rem;
+    border: 1px solid rgba(255, 0, 110, 0.35);
+    background: rgba(255, 0, 110, 0.12);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);
+}
+
+.detail-poster img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.detail-poster-fallback {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255, 0, 110, 0.16), rgba(33, 150, 243, 0.14));
+}
+
+.detail-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+    margin-top: 1rem;
+}
+
+.detail-meta-card {
+    background: rgba(255, 255, 255, 0.055);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.75rem;
+    padding: 0.9rem 1rem;
+}
+
+.detail-meta-label {
+    color: #a0a0a0;
+    font-size: 0.72rem;
+    font-weight: 750;
+    letter-spacing: 0.08em;
+    margin: 0 0 0.35rem;
+    text-transform: uppercase;
+}
+
+.detail-meta-value {
+    color: #ffffff;
+    font-size: 1.05rem;
+    font-weight: 750;
+    line-height: 1.35;
+    margin: 0;
+}
+
+.detail-rating {
+    color: #FFC107;
+}
+
+.detail-synopsis {
+    background: rgba(255, 0, 110, 0.08);
+    border: 1px solid rgba(255, 0, 110, 0.18);
+    border-left: 4px solid #ff006e;
+    border-radius: 0.85rem;
+    padding: 1.25rem 1.35rem;
+    color: #e0e0e0;
+    line-height: 1.75;
+    margin-top: 1rem;
+}
+
+@media (max-width: 760px) {
+    .detail-meta-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-title {
+        font-size: 1.5rem;
+    }
+}
+
 /* ===== BADGES & TAGS ===== */
 .rating-badge {
     display: inline-block;
@@ -758,7 +855,6 @@ def display_recommendation_grid(recommendations, cards_per_row=5):
 
 def display_anime_detail_page(anime_data, anime_title):
     """Tampilkan halaman detail lengkap anime dengan layout yang diperbaiki"""
-    # Cari anime berdasarkan judul
     selected_anime = next(
         (a for a in anime_data if a['title'] == anime_title),
         None
@@ -768,81 +864,68 @@ def display_anime_detail_page(anime_data, anime_title):
         st.error("❌ Anime tidak ditemukan!")
         return
     
-    # Button kembali
-    col1, col2 = st.columns([1, 10])
-    with col1:
-        st.button("⬅️ Kembali", use_container_width=True, on_click=go_back_to_recommendations)
-    
+    title = html.escape(str(selected_anime.get('title', 'Tanpa Judul')))
+    anime_type = html.escape(str(selected_anime.get('type', 'N/A') or 'N/A'))
+    episodes = html.escape(format_episodes(selected_anime.get('episodes', '')))
+    score = html.escape(str(selected_anime.get('score', 'N/A') or 'N/A'))
+    year = html.escape(get_release_year(selected_anime) or 'N/A')
+    synopsis = html.escape(str(selected_anime.get('synopsis', 'Sinopsis belum tersedia.') or 'Sinopsis belum tersedia.'))
+    image_url = html.escape(str(selected_anime.get('image_url', '')).strip())
+
+    st.button("⬅️ Kembali", use_container_width=False, on_click=go_back_to_recommendations)
     st.markdown("---")
-    
-    # Layout: Poster di kiri (sedang), Detail di kanan dengan ukuran yang sesuai
-    col_img, col_info = st.columns([0.95, 1.8], gap="medium")
-    
+
+    col_img, col_info = st.columns([0.9, 2.1], gap="large")
+
     with col_img:
-        # Poster Anime dengan ukuran sedang
-        if selected_anime.get('image_url'):
-            try:
-                st.image(selected_anime['image_url'], width=180, use_container_width=False)
-            except:
-                st.markdown(
-                    '<div style="width: 180px; height: 270px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 2.5rem;"></div>',
-                    unsafe_allow_html=True
-                )
-        else:
-            st.markdown(
-                '<div style="width: 180px; height: 270px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 2.5rem;"></div>',
-                unsafe_allow_html=True
-            )
-    
+        poster_html = f'<img src="{image_url}" alt="{title} poster">' if image_url else '<div class="detail-poster-fallback"></div>'
+        st.markdown(
+            f"""
+            <div class="detail-poster">
+                {poster_html}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
     with col_info:
-        # Judul dengan ukuran lebih compact
-        st.markdown(f"<h3 style='color: #ff006e; margin: 0 0 1rem 0; font-size: 1.4rem; font-weight: 800;'>{selected_anime['title']}</h3>", unsafe_allow_html=True)
-        
-        # Info Cards dalam 3 baris yang compact
-        # TYPE
         st.markdown(
-            f"""<div style='background: linear-gradient(135deg, rgba(33, 150, 243, 0.15) 0%, rgba(33, 150, 243, 0.08) 100%); 
-            padding: 0.9rem; border-radius: 0.7rem; text-align: center; border: 1.2px solid rgba(33, 150, 243, 0.4); 
-            margin-bottom: 0.7rem; transition: all 0.3s ease;'>
-            <p style='color: #a0a0a0; font-size: 0.75rem; margin: 0; letter-spacing: 0.5px; font-weight: 600;'>TIPE</p>
-            <p style='color: #2196F3; margin: 0.4rem 0 0 0; font-size: 1.1rem; font-weight: 700;'>{selected_anime['type']}</p>
-            </div>""",
+            f"""
+            <div class="detail-shell">
+                <h2 class="detail-title">{title}</h2>
+                <div class="detail-meta-grid">
+                    <div class="detail-meta-card">
+                        <p class="detail-meta-label">Rating</p>
+                        <p class="detail-meta-value detail-rating">★ {score}</p>
+                    </div>
+                    <div class="detail-meta-card">
+                        <p class="detail-meta-label">Tipe</p>
+                        <p class="detail-meta-value">{anime_type}</p>
+                    </div>
+                    <div class="detail-meta-card">
+                        <p class="detail-meta-label">Episode</p>
+                        <p class="detail-meta-value">{episodes}</p>
+                    </div>
+                    <div class="detail-meta-card">
+                        <p class="detail-meta-label">Tahun</p>
+                        <p class="detail-meta-value">{year}</p>
+                    </div>
+                </div>
+            </div>
+            """,
             unsafe_allow_html=True
         )
-        
-        # EPISODES
-        st.markdown(
-            f"""<div style='background: linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(76, 175, 80, 0.08) 100%); 
-            padding: 0.9rem; border-radius: 0.7rem; text-align: center; border: 1.2px solid rgba(76, 175, 80, 0.4); 
-            margin-bottom: 0.7rem; transition: all 0.3s ease;'>
-            <p style='color: #a0a0a0; font-size: 0.75rem; margin: 0; letter-spacing: 0.5px; font-weight: 600;'>EPISODE</p>
-            <p style='color: #4CAF50; margin: 0.4rem 0 0 0; font-size: 1.1rem; font-weight: 700;'>{format_episodes(selected_anime['episodes'])}</p>
-            </div>""",
-            unsafe_allow_html=True
-        )
-        
-        # RATING
-        st.markdown(
-            f"""<div style='background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 193, 7, 0.08) 100%); 
-            padding: 0.9rem; border-radius: 0.7rem; text-align: center; border: 1.2px solid rgba(255, 193, 7, 0.4);'>
-            <p style='color: #a0a0a0; font-size: 0.75rem; margin: 0; letter-spacing: 0.5px; font-weight: 600;'>RATING</p>
-            <p style='color: #FFC107; margin: 0.4rem 0 0 0; font-size: 1.1rem; font-weight: 700;'>★ {selected_anime['score']}</p>
-            </div>""",
-            unsafe_allow_html=True
-        )
-    
-    st.markdown("---")
-    
-    # Sinopsis Lengkap (Full Width)
-    st.markdown("## 📖 Sinopsis Lengkap")
+
+    st.markdown("### Sinopsis Lengkap")
     st.markdown(
-        f"""<div style='background: rgba(255, 0, 110, 0.08); padding: 1.5rem; border-radius: 0.9rem; 
-        border-left: 4px solid #ff006e; line-height: 1.8; color: #e0e0e0;'>
-        {selected_anime['synopsis']}
-        </div>""",
+        f"""
+        <div class="detail-synopsis">
+            {synopsis}
+        </div>
+        """,
         unsafe_allow_html=True
     )
-    
+
     st.markdown("---")
 
 # ===================================
