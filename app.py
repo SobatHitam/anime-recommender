@@ -658,26 +658,26 @@ def display_anime_card(title, score, anime_type, episodes, synopsis, image_url=N
                 st.image(image_url, width=150, use_container_width=True, caption="")
             except:
                 st.markdown(
-                    '<div style="width: 150px; height: 220px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 3rem;"></div>',
+                    '<div style="width: 150px; height: 220px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 3rem;">🎬</div>',
                     unsafe_allow_html=True
                 )
         else:
             st.markdown(
-                '<div style="width: 150px; height: 220px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 3rem;"></div>',
+                '<div style="width: 150px; height: 220px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 3rem;">🎬</div>',
                 unsafe_allow_html=True
             )
     
     with col_info:
         if clickable:
-            st.markdown(f'<h3 style="color: #ff006e; margin: 0 0 1rem 0; cursor: pointer;">{title}</h3>', unsafe_allow_html=True)
+            st.markdown(f'<h3 style="color: #ff006e; margin: 0 0 1rem 0; cursor: pointer;">🎬 {title}</h3>', unsafe_allow_html=True)
             st.button(f"Lihat Detail", key=f"detail_{title}_{hash(title) % 10000}", use_container_width=False, on_click=set_detail_anime, args=(title,))
         else:
-            st.markdown(f'<h3 style="color: #ff006e; margin: 0 0 1rem 0;">{title}</h3>', unsafe_allow_html=True)
+            st.markdown(f'<h3 style="color: #ff006e; margin: 0 0 1rem 0;">🎬 {title}</h3>', unsafe_allow_html=True)
         
         # Info badges dalam satu baris
         badge_col1, badge_col2, badge_col3 = st.columns(3, gap="small")
         with badge_col1:
-            st.markdown(f'<div style="text-align: center; background: rgba(255, 193, 7, 0.15); padding: 0.8rem; border-radius: 0.6rem; border: 1px solid rgba(255, 193, 7, 0.4);"><span style="color: #a0a0a0; font-size: 0.8rem;">RATING</span><br><span style="color: #FFC107; font-weight: bold; font-size: 1.3rem;">{score}</span></div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="text-align: center; background: rgba(255, 193, 7, 0.15); padding: 0.8rem; border-radius: 0.6rem; border: 1px solid rgba(255, 193, 7, 0.4);"><span style="color: #a0a0a0; font-size: 0.8rem;">⭐ RATING</span><br><span style="color: #FFC107; font-weight: bold; font-size: 1.3rem;">{score}</span></div>', unsafe_allow_html=True)
         
         with badge_col2:
             st.markdown(f'<div style="text-align: center; background: rgba(33, 150, 243, 0.15); padding: 0.8rem; border-radius: 0.6rem; border: 1px solid rgba(33, 150, 243, 0.4);"><span style="color: #a0a0a0; font-size: 0.8rem;">TIPE</span><br><span style="color: #2196F3; font-weight: bold; font-size: 1.3rem;">{anime_type}</span></div>', unsafe_allow_html=True)
@@ -724,7 +724,7 @@ def display_recommendation_grid(recommendations, cards_per_row=5):
                 if image_url:
                     poster_html = f'<img src="{image_url}" alt="{title} poster">'
                 else:
-                    poster_html = '<div class="poster-fallback"></div>'
+                    poster_html = '<div class="poster-fallback">🎬</div>'
 
                 st.markdown(
                     f"""
@@ -737,7 +737,7 @@ def display_recommendation_grid(recommendations, cards_per_row=5):
                             <p class="poster-title">{title}</p>
                             <div class="poster-submeta">
                                 <span>{html.escape(year) if year else 'Tahun N/A'}</span>
-                                <span class="poster-score">{score} ⭐</span>
+                                <span class="poster-score">★ {score}</span>
                             </div>
                         </div>
                     </div>
@@ -785,18 +785,18 @@ def display_anime_detail_page(anime_data, anime_title):
                 st.image(selected_anime['image_url'], width=180, use_container_width=False)
             except:
                 st.markdown(
-                    '<div style="width: 180px; height: 270px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 2.5rem;"></div>',
+                    '<div style="width: 180px; height: 270px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 2.5rem;">🎬</div>',
                     unsafe_allow_html=True
                 )
         else:
             st.markdown(
-                '<div style="width: 180px; height: 270px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 2.5rem;"></div>',
+                '<div style="width: 180px; height: 270px; background: rgba(255, 0, 110, 0.2); display: flex; align-items: center; justify-content: center; border-radius: 0.8rem; border: 2px solid rgba(255, 0, 110, 0.3); font-size: 2.5rem;">🎬</div>',
                 unsafe_allow_html=True
             )
     
     with col_info:
         # Judul dengan ukuran lebih compact
-        st.markdown(f"<h3 style='color: #ff006e; margin: 0 0 1rem 0; font-size: 1.4rem; font-weight: 800;'>{selected_anime['title']}</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style='color: #ff006e; margin: 0 0 1rem 0; font-size: 1.4rem; font-weight: 800;'>🎬 {selected_anime['title']}</h3>", unsafe_allow_html=True)
         
         # Info Cards dalam 3 baris yang compact
         # TYPE
@@ -825,8 +825,8 @@ def display_anime_detail_page(anime_data, anime_title):
         st.markdown(
             f"""<div style='background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 193, 7, 0.08) 100%); 
             padding: 0.9rem; border-radius: 0.7rem; text-align: center; border: 1.2px solid rgba(255, 193, 7, 0.4);'>
-            <p style='color: #a0a0a0; font-size: 0.75rem; margin: 0; letter-spacing: 0.5px; font-weight: 600;'>RATING</p>
-            <p style='color: #FFC107; margin: 0.4rem 0 0 0; font-size: 1.1rem; font-weight: 700;'>{selected_anime['score']} ⭐ /10</p>
+            <p style='color: #a0a0a0; font-size: 0.75rem; margin: 0; letter-spacing: 0.5px; font-weight: 600;'>⭐ RATING</p>
+            <p style='color: #FFC107; margin: 0.4rem 0 0 0; font-size: 1.1rem; font-weight: 700;'>{selected_anime['score']}/10</p>
             </div>""",
             unsafe_allow_html=True
         )
