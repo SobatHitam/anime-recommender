@@ -59,10 +59,10 @@ def get_anime_data():
                 df['start_date'] = ''
 
         optional_columns = [
-            'anime_id', 'image_url', 'synopsis', 'type', 'episodes',
+            'anime_id', 'anime_url', 'image_url', 'synopsis', 'type', 'episodes',
             'genres', 'themes', 'demographics', 'producers', 'studios', 'source',
             'duration', 'rating', 'rank', 'popularity', 'members',
-            'favorites', 'scored_by', 'english_name'
+            'favorites', 'scored_by', 'english_name', 'japanese_names'
         ]
 
         for column in optional_columns:
@@ -91,6 +91,7 @@ def get_anime_data():
         df['synopsis'] = df['synopsis'].astype(str)
         df['type'] = df['type'].astype(str)
         df['genres'] = df['genres'].astype(str)
+        df['anime_id'] = df['anime_id'].astype(str)
 
         # Convert to list of dictionaries (same format as database)
         anime_data = df.to_dict(orient='records')

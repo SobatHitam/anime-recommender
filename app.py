@@ -287,7 +287,35 @@ p, span, li {
     font-size: 2rem;
     line-height: 1.18;
     font-weight: 800;
-    margin: 0 0 0.8rem;
+    margin: 0 0 0.35rem;
+}
+
+.detail-subtitle {
+    color: #ff85c0;
+    font-size: 1rem;
+    line-height: 1.45;
+    margin: 0 0 0.9rem;
+}
+
+.detail-link {
+    display: inline-block;
+    margin-top: 0.85rem;
+    color: #ffffff !important;
+    background: rgba(255, 0, 110, 0.22);
+    border: 1px solid rgba(255, 0, 110, 0.45);
+    border-radius: 0.6rem;
+    padding: 0.55rem 0.8rem;
+    text-decoration: none !important;
+    font-weight: 700;
+}
+
+.detail-section-title {
+    color: #ff85c0;
+    font-size: 0.92rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    margin: 1.2rem 0 0.65rem;
+    text-transform: uppercase;
 }
 
 .detail-poster {
@@ -349,6 +377,58 @@ p, span, li {
 
 .detail-rating {
     color: #FFC107;
+}
+
+.detail-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin: 0.5rem 0 0.25rem;
+}
+
+.detail-chip {
+    display: inline-block;
+    color: #ffffff;
+    background: rgba(255, 0, 110, 0.16);
+    border: 1px solid rgba(255, 133, 192, 0.42);
+    border-radius: 999px;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.detail-side-card {
+    max-width: 260px;
+    margin: 1rem auto 0;
+    background: rgba(255, 255, 255, 0.055);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.85rem;
+    padding: 1rem;
+}
+
+.detail-side-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    color: #e0e0e0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0.55rem 0;
+}
+
+.detail-side-row:last-child {
+    border-bottom: 0;
+}
+
+.detail-side-label {
+    color: #a0a0a0;
+    font-size: 0.8rem;
+}
+
+.detail-side-value {
+    color: #ffffff;
+    font-weight: 750;
+    text-align: right;
 }
 
 .detail-synopsis {
@@ -563,6 +643,43 @@ def format_rank_value(value):
     """Format rank/popularity dengan tanda # jika datanya tersedia."""
     formatted = format_number(value)
     return f"#{formatted}" if formatted != "N/A" else "N/A"
+
+def clean_display_value(value, fallback="N/A"):
+    """Bersihkan nilai kosong/NaN dari CSV untuk tampilan."""
+    if value is None:
+        return fallback
+    text = str(value).strip()
+    if not text or text.lower() in {"nan", "none", "null"}:
+        return fallback
+    return text
+
+def safe_display(value, fallback="N/A"):
+    """Escape nilai sebelum masuk HTML."""
+    return html.escape(clean_display_value(value, fallback))
+
+def build_detail_card(label, value, extra_class=""):
+    """Render satu kartu metadata detail."""
+    value_class = f"detail-meta-value {extra_class}".strip()
+    return f"""
+    <div class="detail-meta-card">
+        <p class="detail-meta-label">{html.escape(label)}</p>
+        <p class="{value_class}">{value}</p>
+    </div>
+    """
+
+def build_chip_row(label, value):
+    """Render list CSV sebagai chip yang rapi."""
+    items = split_list_field(value)
+    if not items:
+        return build_detail_card(label, "N/A")
+
+    chips = ''.join(f'<span class="detail-chip">{html.escape(item)}</span>' for item in items)
+    return f"""
+    <div class="detail-meta-card">
+        <p class="detail-meta-label">{html.escape(label)}</p>
+        <div class="detail-chip-row">{chips}</div>
+    </div>
+    """
 
 def get_accuracy_level(similarity_score):
     """Ubah skor similarity menjadi tingkat akurasi yang mudah dipahami."""
@@ -782,7 +899,11 @@ def get_anime_recommendations(anime_title, anime_data, tfidf_matrix, genre_vecto
     recommendations = []
     for idx, sim, anime, matching_types in similarities[:n_recommendations]:
         recommendations.append({
+            'anime_id': anime.get('anime_id', ''),
+            'anime_url': anime.get('anime_url', ''),
             'title': anime.get('title', 'Tanpa Judul'),
+            'english_name': anime.get('english_name', ''),
+            'japanese_names': anime.get('japanese_names', ''),
             'score': anime.get('score', 'N/A'),
             'type': anime.get('type', 'N/A'),
             'episodes': anime.get('episodes', ''),
@@ -852,7 +973,7 @@ def go_back_to_recommendations():
     st.session_state.show_detail = False
     st.session_state.detail_anime = None
 
-def display_anime_card(title, score, anime_type, episodes, synopsis, image_url=None, similarity_score=None, matching_types=None, clickable=False):
+def display_anime_card(title, score, anime_type, episodes, synopsis, image_url=None, similarity_score=None, matching_types=None, clickable=False, detail_key=None):
     """Display anime card dengan layout yang diperbaiki"""
     col_img, col_info = st.columns([0.8, 2.2], gap="medium")
     
@@ -874,7 +995,7 @@ def display_anime_card(title, score, anime_type, episodes, synopsis, image_url=N
     with col_info:
         if clickable:
             st.markdown(f'<h3 style="color: #ff006e; margin: 0 0 1rem 0; cursor: pointer;">{title}</h3>', unsafe_allow_html=True)
-            st.button(f"Lihat Detail", key=f"detail_{title}_{hash(title) % 10000}", use_container_width=False, on_click=set_detail_anime, args=(title,))
+            st.button(f"Lihat Detail", key=f"detail_{title}_{hash(str(detail_key or title)) % 10000}", use_container_width=False, on_click=set_detail_anime, args=(detail_key or title,))
         else:
             st.markdown(f'<h3 style="color: #ff006e; margin: 0 0 1rem 0;">{title}</h3>', unsafe_allow_html=True)
         
@@ -920,6 +1041,7 @@ def display_recommendation_grid(recommendations, cards_per_row=5):
             with cols[offset]:
                 title = html.escape(str(rec.get('title', 'Tanpa Judul')))
                 image_url = html.escape(str(rec.get('image_url', '')).strip())
+                detail_key = rec.get('anime_id') or rec.get('title', '')
                 year = get_release_year(rec)
                 score = rec.get('score', 'N/A')
                 similarity = rec.get('similarity_score', 0) or 0
@@ -951,10 +1073,10 @@ def display_recommendation_grid(recommendations, cards_per_row=5):
                 )
                 st.button(
                     "Lihat Detail",
-                    key=f"poster_detail_{idx}_{hash(rec.get('title', '')) % 100000}",
+                    key=f"poster_detail_{idx}_{hash(str(detail_key)) % 100000}",
                     use_container_width=True,
                     on_click=set_detail_anime,
-                    args=(rec.get('title', ''),)
+                    args=(detail_key,)
                 )
 
 # ===================================
@@ -963,8 +1085,12 @@ def display_recommendation_grid(recommendations, cards_per_row=5):
 
 def display_anime_detail_page(anime_data, anime_title):
     """Tampilkan halaman detail lengkap anime dengan layout yang diperbaiki"""
+    anime_key = str(anime_title)
     selected_anime = next(
-        (a for a in anime_data if a.get('title') == anime_title),
+        (
+            a for a in anime_data
+            if str(a.get('anime_id', '')) == anime_key or str(a.get('title', '')) == anime_key
+        ),
         None
     )
     
@@ -972,27 +1098,60 @@ def display_anime_detail_page(anime_data, anime_title):
         st.error("❌ Anime tidak ditemukan!")
         return
     
-    title = html.escape(str(selected_anime.get('title', 'Tanpa Judul')))
-    anime_type = html.escape(str(selected_anime.get('type', 'N/A') or 'N/A'))
+    title = safe_display(selected_anime.get('title', 'Tanpa Judul'), 'Tanpa Judul')
+    english_name = safe_display(selected_anime.get('english_name', ''), '')
+    japanese_names = safe_display(selected_anime.get('japanese_names', ''), '')
+    anime_type = safe_display(selected_anime.get('type', ''))
     episodes = html.escape(format_episodes(selected_anime.get('episodes', '')))
-    score = html.escape(str(selected_anime.get('score', 'N/A') or 'N/A'))
-    synopsis = html.escape(str(selected_anime.get('synopsis', 'Sinopsis belum tersedia.') or 'Sinopsis belum tersedia.'))
+    score = safe_display(selected_anime.get('score', ''))
+    synopsis = safe_display(selected_anime.get('synopsis', 'Sinopsis belum tersedia.'), 'Sinopsis belum tersedia.')
     image_url = html.escape(str(selected_anime.get('image_url', '')).strip())
-    english_name = html.escape(str(selected_anime.get('english_name', '') or 'N/A'))
-    genres = html.escape(str(selected_anime.get('genres', '') or 'N/A'))
-    themes = html.escape(str(selected_anime.get('themes', '') or 'N/A'))
-    demographics = html.escape(str(selected_anime.get('demographics', '') or 'N/A'))
-    premiered = html.escape(str(selected_anime.get('start_date', '') or 'N/A'))
-    producers = html.escape(str(selected_anime.get('producers', '') or 'N/A'))
-    studios = html.escape(str(selected_anime.get('studios', '') or 'N/A'))
-    source = html.escape(str(selected_anime.get('source', '') or 'N/A'))
-    duration = html.escape(str(selected_anime.get('duration', '') or 'N/A'))
-    age_rating = html.escape(str(selected_anime.get('rating', '') or 'N/A'))
+    anime_url = html.escape(str(selected_anime.get('anime_url', '')).strip())
+    anime_id = safe_display(selected_anime.get('anime_id', ''))
+    premiered = safe_display(selected_anime.get('start_date', ''))
+    producers = safe_display(selected_anime.get('producers', ''))
+    studios = safe_display(selected_anime.get('studios', ''))
+    source = safe_display(selected_anime.get('source', ''))
+    duration = safe_display(selected_anime.get('duration', ''))
+    age_rating = safe_display(selected_anime.get('rating', ''))
     rank = html.escape(format_rank_value(selected_anime.get('rank', '')))
     popularity = html.escape(format_rank_value(selected_anime.get('popularity', '')))
     members = html.escape(format_number(selected_anime.get('members', '')))
     favorites = html.escape(format_number(selected_anime.get('favorites', '')))
     scored_by = html.escape(format_number(selected_anime.get('scored_by', '')))
+    subtitle_parts = [part for part in [english_name, japanese_names] if part]
+    subtitle_html = " / ".join(subtitle_parts)
+    mal_link = f'<a class="detail-link" href="{anime_url}" target="_blank" rel="noopener noreferrer">Buka di MyAnimeList</a>' if anime_url else ''
+
+    overview_cards = ''.join([
+        build_detail_card("Rating", f"★ {score}", "detail-rating"),
+        build_detail_card("Tipe", anime_type),
+        build_detail_card("Episode", episodes),
+        build_detail_card("Premiered", premiered),
+        build_detail_card("Durasi", duration),
+        build_detail_card("Age Rating", age_rating),
+    ])
+
+    classification_cards = ''.join([
+        build_chip_row("Genre", selected_anime.get('genres', '')),
+        build_chip_row("Themes", selected_anime.get('themes', '')),
+        build_chip_row("Demographic", selected_anime.get('demographics', '')),
+        build_detail_card("Source", source),
+    ])
+
+    production_cards = ''.join([
+        build_detail_card("Studio", studios),
+        build_detail_card("Producers", producers),
+    ])
+
+    popularity_cards = ''.join([
+        build_detail_card("Anime ID", anime_id),
+        build_detail_card("Rank", rank),
+        build_detail_card("Popularity", popularity),
+        build_detail_card("Members", members),
+        build_detail_card("Favorites", favorites),
+        build_detail_card("Scored By", scored_by),
+    ])
 
     st.button("⬅️ Kembali", use_container_width=False, on_click=go_back_to_recommendations)
     st.markdown("---")
@@ -1006,6 +1165,12 @@ def display_anime_detail_page(anime_data, anime_title):
             <div class="detail-poster">
                 {poster_html}
             </div>
+            <div class="detail-side-card">
+                <div class="detail-side-row"><span class="detail-side-label">Score</span><span class="detail-side-value">★ {score}</span></div>
+                <div class="detail-side-row"><span class="detail-side-label">Rank</span><span class="detail-side-value">{rank}</span></div>
+                <div class="detail-side-row"><span class="detail-side-label">Popularity</span><span class="detail-side-value">{popularity}</span></div>
+                <div class="detail-side-row"><span class="detail-side-label">Members</span><span class="detail-side-value">{members}</span></div>
+            </div>
             """,
             unsafe_allow_html=True
         )
@@ -1015,80 +1180,16 @@ def display_anime_detail_page(anime_data, anime_title):
             f"""
             <div class="detail-shell">
                 <h2 class="detail-title">{title}</h2>
-                <div class="detail-meta-grid">
-                    <div class="detail-meta-card">
-                        <p class="detail-meta-label">English Title</p>
-                        <p class="detail-meta-value">{english_name}</p>
-                    </div>
-                    <div class="detail-meta-card">
-                        <p class="detail-meta-label">Rating</p>
-                        <p class="detail-meta-value detail-rating">★ {score}</p>
-                    </div>
-                    <div class="detail-meta-card">
-                        <p class="detail-meta-label">Tipe</p>
-                        <p class="detail-meta-value">{anime_type}</p>
-                    </div>
-                    <div class="detail-meta-card">
-                        <p class="detail-meta-label">Episode</p>
-                        <p class="detail-meta-value">{episodes}</p>
-                    </div>
-                    <div class="detail-meta-card">
-                        <p class="detail-meta-label">Premiered</p>
-                        <p class="detail-meta-value">{premiered}</p>
-                    </div>
-                    <div class="detail-meta-card">
-                        <p class="detail-meta-label">Genre</p>
-                        <p class="detail-meta-value">{genres}</p>
-                    </div>
-                    <div class="detail-meta-card">
-                        <p class="detail-meta-label">Themes</p>
-                        <p class="detail-meta-value">{themes}</p>
-                    </div>
-                    <div class="detail-meta-card">
-                        <p class="detail-meta-label">Demographic</p>
-                        <p class="detail-meta-value">{demographics}</p>
-                    </div>
-                    <div class="detail-meta-card">
-                        <p class="detail-meta-label">Studio</p>
-                        <p class="detail-meta-value">{studios}</p>
-                    </div>
-                    <div class="detail-meta-card">
-                        <p class="detail-meta-label">Producers</p>
-                        <p class="detail-meta-value">{producers}</p>
-                    </div>
-                    <div class="detail-meta-card">
-                        <p class="detail-meta-label">Source</p>
-                        <p class="detail-meta-value">{source}</p>
-                    </div>
-                    <div class="detail-meta-card">
-                        <p class="detail-meta-label">Durasi</p>
-                        <p class="detail-meta-value">{duration}</p>
-                    </div>
-                    <div class="detail-meta-card">
-                        <p class="detail-meta-label">Age Rating</p>
-                        <p class="detail-meta-value">{age_rating}</p>
-                    </div>
-                    <div class="detail-meta-card">
-                        <p class="detail-meta-label">Rank</p>
-                        <p class="detail-meta-value">{rank}</p>
-                    </div>
-                    <div class="detail-meta-card">
-                        <p class="detail-meta-label">Popularity</p>
-                        <p class="detail-meta-value">{popularity}</p>
-                    </div>
-                    <div class="detail-meta-card">
-                        <p class="detail-meta-label">Members</p>
-                        <p class="detail-meta-value">{members}</p>
-                    </div>
-                    <div class="detail-meta-card">
-                        <p class="detail-meta-label">Favorites</p>
-                        <p class="detail-meta-value">{favorites}</p>
-                    </div>
-                    <div class="detail-meta-card">
-                        <p class="detail-meta-label">Scored By</p>
-                        <p class="detail-meta-value">{scored_by}</p>
-                    </div>
-                </div>
+                <p class="detail-subtitle">{subtitle_html}</p>
+                {mal_link}
+                <p class="detail-section-title">Overview</p>
+                <div class="detail-meta-grid">{overview_cards}</div>
+                <p class="detail-section-title">Classification</p>
+                <div class="detail-meta-grid">{classification_cards}</div>
+                <p class="detail-section-title">Production</p>
+                <div class="detail-meta-grid">{production_cards}</div>
+                <p class="detail-section-title">Popularity</p>
+                <div class="detail-meta-grid">{popularity_cards}</div>
             </div>
             """,
             unsafe_allow_html=True
@@ -1197,7 +1298,8 @@ def main():
                     selected_anime_data.get('episodes', ''),
                     selected_anime_data.get('synopsis', ''),
                     selected_anime_data.get('image_url', ''),
-                    clickable=True
+                    clickable=True,
+                    detail_key=selected_anime_data.get('anime_id') or selected_anime_data.get('title', '')
                 )
 
             st.markdown("---")
