@@ -1246,7 +1246,7 @@ def main():
     
     # Build TF-IDF (CACHED - hanya jalan sekali!)
     with st.spinner("⏳ Memproses dataset anime..."):
-        anime_data_tuple = tuple(anime_data)
+        anime_data_tuple = tuple(filtered_anime_data)
         tfidf_matrix, genre_vectors, genre_list, tfidf_model = build_tfidf_features(anime_data_tuple)
     
     # MAIN PAGE: REKOMENDASI ANIME SESUAI DOKUMENTASI DESAIN
@@ -1255,7 +1255,6 @@ def main():
         st.markdown("**Metode:** Content-Based Filtering dengan TF-IDF + Type Matching")
         
         col1, col2 = st.columns([2, 1], gap="medium")
-        filtered_anime_data = [anime for anime in anime_data if 'hentai' not in str(anime.get('genres', '')).lower()]
         anime_titles = [anime.get('title', 'Tanpa Judul') for anime in filtered_anime_data]
         
         with col1:
@@ -1277,7 +1276,7 @@ def main():
         if st.button("💡 Tampilkan Rekomendasi", key="rec_button", use_container_width=True):
             with st.spinner("⏳ Mencari rekomendasi anime yang cocok..."):
                 recommendations = get_anime_recommendations(
-                    selected_anime, filtered_anime_data, anime_data, tfidf_matrix, genre_vectors, genre_list, n_recommendations
+                    selected_anime, filtered_anime_data, tfidf_matrix, genre_vectors, genre_list, n_recommendations
                 )
                 st.session_state.recommendations = recommendations or []
                 st.session_state.recommendation_source = selected_anime
