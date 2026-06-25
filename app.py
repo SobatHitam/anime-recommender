@@ -1198,7 +1198,7 @@ def display_anime_detail_page(anime_data, anime_title):
     st.markdown("### Sinopsis Lengkap")
     st.markdown(
         f"""
-        <div class="detail-synopsis">
+        <div id="synopsis-section" class="detail-synopsis">
             {synopsis}
         </div>
         """,
@@ -1206,6 +1206,21 @@ def display_anime_detail_page(anime_data, anime_title):
     )
 
     st.markdown("---")
+
+    # Scroll otomatis ke sinopsis setelah halaman dimuat
+    st.components.v1.html(
+        """
+        <script>
+            setTimeout(function() {
+                var el = document.getElementById('synopsis-section');
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, 300);
+        </script>
+        """,
+        height=0,
+    )
 
 # ===================================
 # MAIN APPLICATION
