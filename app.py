@@ -1156,6 +1156,18 @@ def display_anime_detail_page(anime_data, anime_title):
     st.button("⬅️ Kembali", use_container_width=False, on_click=go_back_to_recommendations)
     st.markdown("---")
 
+    # ============ SINOPSIS LENGKAP DITAMPILKAN DI ATAS ============
+    st.markdown("### Sinopsis Lengkap")
+    st.markdown(
+        f"""
+        <div class="detail-synopsis">
+            {synopsis}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    st.markdown("---")
+
     col_img, col_info = st.columns([0.9, 2.1], gap="large")
 
     with col_img:
@@ -1195,15 +1207,9 @@ def display_anime_detail_page(anime_data, anime_title):
             unsafe_allow_html=True
         )
 
-    st.markdown("### Sinopsis Lengkap")
-    st.markdown(
-        f"""
-        <div class="detail-synopsis">
-            {synopsis}
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    # SINOPSIS LENGKAP SUDAH DIPINDAHKAN KE ATAS, MAKA BAGIAN BAWAH DIHAPUS
+    # st.markdown("### Sinopsis Lengkap")  # <-- dihapus
+    # st.markdown(...)                     # <-- dihapus
 
     st.markdown("---")
 
