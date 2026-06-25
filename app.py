@@ -1080,7 +1080,7 @@ def display_recommendation_grid(recommendations, cards_per_row=5):
                 )
 
 # ===================================
-# FUNGSI DISPLAY DETAIL ANIME (HALAMAN BARU) - DIPERBAIKI
+# FUNGSI DISPLAY DETAIL ANIME (HALAMAN BARU) - SCROLL KE ATAS
 # ===================================
 
 def display_anime_detail_page(anime_data, anime_title):
@@ -1207,24 +1207,14 @@ def display_anime_detail_page(anime_data, anime_title):
 
     st.markdown("---")
 
-    # ============ PERBAIKIAN SCROLL OTOMATIS KE SINOPSIS ============
+    # ============ SCROLL OTOMATIS KE BAGIAN PALING ATAS ============
     st.components.v1.html(
         """
         <script>
             (function() {
-                function scrollToSynopsis() {
-                    var el = document.getElementById('synopsis-section');
-                    if (el) {
-                        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        return true;
-                    }
-                    return false;
-                }
-                // Coba pertama setelah 300ms, jika gagal coba lagi setelah 700ms
+                // Tunggu sebentar agar halaman selesai dirender, lalu scroll ke atas
                 setTimeout(function() {
-                    if (!scrollToSynopsis()) {
-                        setTimeout(scrollToSynopsis, 700);
-                    }
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                 }, 300);
             })();
         </script>
