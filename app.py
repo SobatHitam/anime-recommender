@@ -1080,7 +1080,7 @@ def display_recommendation_grid(recommendations, cards_per_row=5):
                 )
 
 # ===================================
-# FUNGSI DISPLAY DETAIL ANIME (HALAMAN BARU)
+# FUNGSI DISPLAY DETAIL ANIME (HALAMAN BARU) - DIPERBAIKI SCROLL
 # ===================================
 
 def display_anime_detail_page(anime_data, anime_title):
@@ -1207,16 +1207,35 @@ def display_anime_detail_page(anime_data, anime_title):
 
     st.markdown("---")
 
-    # Scroll otomatis ke sinopsis setelah halaman dimuat
+    # PERBAIKAN: SCROLL OTOMATIS KE SINOPSIS DENGAN JAVASCRIPT YANG LEBIH ANDAL
     st.components.v1.html(
         """
         <script>
-            setTimeout(function() {
-                var el = document.getElementById('synopsis-section');
-                if (el) {
-                    el.scrollIntoView({ behavior: 'smooth' });
-                }
-            }, 300);
+            (function() {
+                // Tunggu hingga seluruh halaman dan gambar dimuat
+                window.addEventListener('load', function() {
+                    // Beri jeda tambahan 500ms untuk memastikan semua komponen Streamlit selesai di-render
+                    setTimeout(function() {
+                        var el = document.getElementById('synopsis-section');
+                        if (el) {
+                            // Scroll halus ke elemen
+                            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            // Fallback: jika scrollIntoView tidak berjalan, gunakan hash
+                            if (window.location.hash !== '#synopsis-section') {
+                                window.location.hash = 'synopsis-section';
+                            }
+                        } else {
+                            // Jika elemen belum ditemukan, coba lagi setelah 1 detik
+                            setTimeout(function() {
+                                var el2 = document.getElementById('synopsis-section');
+                                if (el2) {
+                                    el2.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                }
+                            }, 1000);
+                        }
+                    }, 500);
+                });
+            })();
         </script>
         """,
         height=0,
