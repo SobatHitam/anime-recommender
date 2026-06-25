@@ -1080,7 +1080,7 @@ def display_recommendation_grid(recommendations, cards_per_row=5):
                 )
 
 # ===================================
-# FUNGSI DISPLAY DETAIL ANIME (HALAMAN BARU) - SCROLL KE ATAS
+# FUNGSI DISPLAY DETAIL ANIME (HALAMAN BARU) - DIPERBAIKI TOTAL
 # ===================================
 
 def display_anime_detail_page(anime_data, anime_title):
@@ -1198,7 +1198,7 @@ def display_anime_detail_page(anime_data, anime_title):
     st.markdown("### Sinopsis Lengkap")
     st.markdown(
         f"""
-        <div id="synopsis-section" class="detail-synopsis">
+        <div class="detail-synopsis">
             {synopsis}
         </div>
         """,
@@ -1207,15 +1207,17 @@ def display_anime_detail_page(anime_data, anime_title):
 
     st.markdown("---")
 
-    # ============ SCROLL OTOMATIS KE BAGIAN PALING ATAS ============
+    # ============ PASTIKAN SCROLL KE ATAS ============
     st.components.v1.html(
         """
         <script>
             (function() {
-                // Tunggu sebentar agar halaman selesai dirender, lalu scroll ke atas
-                setTimeout(function() {
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                }, 300);
+                // Hapus hash dari URL jika ada
+                if (window.location.hash) {
+                    history.replaceState(null, null, window.location.pathname + window.location.search);
+                }
+                // Scroll ke atas
+                window.scrollTo(0, 0);
             })();
         </script>
         """,
