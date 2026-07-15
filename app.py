@@ -611,67 +611,67 @@ st.markdown(dark_anime_style, unsafe_allow_html=True)
 def format_episodes(episodes):
     """Format episodes untuk menghapus .0"""
     if not episodes:
-        return "N/A"
+        return "N/A"  # Jika data episode kosong, tampilkan N/A
     try:
-        ep_float = float(episodes)
-        ep_int = int(ep_float)
+        ep_float = float(episodes)  # Konversi nilai episode ke float
+        ep_int = int(ep_float)  # Konversi ulang ke integer untuk pengecekan
         if ep_float == ep_int:
-            return str(ep_int)
-        return str(ep_float)
+            return str(ep_int)  # Jika angka bulat, tampilkan tanpa .0
+        return str(ep_float)  # Jika bukan bulat, tampilkan nilai float
     except:
-        return str(episodes)
+        return str(episodes)  # Jika konversi gagal, gunakan string asli
 
 def get_release_year(anime):
     """Ambil tahun dari start_date jika tersedia."""
-    start_date = str(anime.get('start_date', '')).strip()
-    year_match = re.search(r'\b(19|20)\d{2}\b', start_date)
+    start_date = str(anime.get('start_date', '')).strip()  # Ambil field tanggal
+    year_match = re.search(r'\b(19|20)\d{2}\b', start_date)  # Cari tahun 1900-2099
     if year_match:
-        return year_match.group(0)
-    return ""
+        return year_match.group(0)  # Kembalikan tahun pertama yang cocok
+    return ""  # Tidak ditemukan tahun
 
 def format_number(value):
     """Format angka besar agar mudah dibaca."""
     try:
-        number = float(value)
+        number = float(value)  # Ubah input ke float untuk pengolahan
         if number.is_integer():
-            return f"{int(number):,}".replace(",", ".")
-        return f"{number:,.1f}".replace(",", ".")
+            return f"{int(number):,}".replace(",", ".")  # Format dengan titik ribuan
+        return f"{number:,.1f}".replace(",", ".")  # Format desimal satu angka
     except:
-        return str(value) if value not in (None, '') else "N/A"
+        return str(value) if value not in (None, '') else "N/A"  # Kembalikan fallback
 
 def format_rank_value(value):
     """Format rank/popularity dengan tanda # jika datanya tersedia."""
-    formatted = format_number(value)
-    return f"#{formatted}" if formatted != "N/A" else "N/A"
+    formatted = format_number(value)  # Format angka rank/popularity
+    return f"#{formatted}" if formatted != "N/A" else "N/A"  # Tambahkan prefix # jika valid
 
 def clean_display_value(value, fallback="N/A"):
     """Bersihkan nilai kosong/NaN dari CSV untuk tampilan."""
     if value is None:
-        return fallback
-    text = str(value).strip()
+        return fallback  # Nilai None dianggap kosong
+    text = str(value).strip()  # Ubah ke string dan hilangkan spasi
     if not text or text.lower() in {"nan", "none", "null"}:
-        return fallback
-    return text
+        return fallback  # Angka NaN/None/null dianggap kosong
+    return text  # Kembalikan nilai bersih
 
 def safe_display(value, fallback="N/A"):
     """Escape nilai sebelum masuk HTML."""
-    return html.escape(clean_display_value(value, fallback))
+    return html.escape(clean_display_value(value, fallback))  # Escape HTML untuk keamanan
 
 def build_detail_card(label, value, extra_class=""):
     """Render satu kartu metadata detail."""
-    value_class = f"detail-meta-value {extra_class}".strip()
+    value_class = f"detail-meta-value {extra_class}".strip()  # Gabungkan class tambahan bila ada
     return f"""
     <div class="detail-meta-card">
         <p class="detail-meta-label">{html.escape(label)}</p>
         <p class="{value_class}">{value}</p>
     </div>
-    """
+    """  # Kembalikan HTML kartu metadata sebagai string
 
 def build_chip_row(label, value):
     """Render list CSV sebagai chip yang rapi."""
-    items = split_list_field(value)
+    items = split_list_field(value)  # Pecah daftar CSV menjadi array bersih
     if not items:
-        return build_detail_card(label, "N/A")
+        return build_detail_card(label, "N/A")  # Jika kosong, tampilkan N/A
 
     chips = ''.join(f'<span class="detail-chip">{html.escape(item)}</span>' for item in items)
     return f"""
@@ -679,46 +679,47 @@ def build_chip_row(label, value):
         <p class="detail-meta-label">{html.escape(label)}</p>
         <div class="detail-chip-row">{chips}</div>
     </div>
-    """
+    """  # Buat baris chip HTML dari setiap item
 
 def get_accuracy_level(similarity_score):
     """Ubah skor similarity menjadi tingkat akurasi yang mudah dipahami."""
-    percent = (similarity_score or 0) * 100
+    percent = (similarity_score or 0) * 100  # Konversi skor menjadi persentase
     if percent >= 45:
-        return "Sangat Cocok"
+        return "Sangat Cocok"  # Skor sangat tinggi
     if percent >= 30:
-        return "Cocok"
+        return "Cocok"  # Skor cukup tinggi
     if percent >= 18:
-        return "Cukup Cocok"
-    return "Rendah"
+        return "Cukup Cocok"  # Skor moderat
+    return "Rendah"  # Skor rendah
 
 def split_list_field(value):
     """Pisahkan field CSV seperti genres/themes menjadi list bersih."""
     if not value:
-        return []
-    return [item.strip() for item in str(value).split(',') if item.strip()]
+        return []  # Tidak ada item bila input kosong
+    return [item.strip() for item in str(value).split(',') if item.strip()]  # Pisah dan bersihkan tiap item
 
 def get_anime_feature_tags(anime):
     """Gabungkan detail MAL penting untuk similarity berbasis metadata."""
-    tags = []
+    tags = []  # Fitur metadata yang akan memengaruhi skor rekomendasi
     for field in ['genres', 'themes', 'demographics', 'studios']:
         tags.extend([f"{field}:{item}" for item in split_list_field(anime.get(field, ''))])
+        # Setiap genre/theme/studio/demographic menjadi token unik
 
-    anime_type = str(anime.get('type', '')).strip()
+    anime_type = str(anime.get('type', '')).strip()  # Ambil tipe anime
     if anime_type:
-        tags.append(f"type:{anime_type}")
+        tags.append(f"type:{anime_type}")  # Tambahkan tipe anime sebagai fitur
 
-    source = str(anime.get('source', '')).strip()
+    source = str(anime.get('source', '')).strip()  # Ambil source anime
     if source:
-        tags.append(f"source:{source}")
+        tags.append(f"source:{source}")  # Sumber membantu menentukan kecocokan
 
-    rating = str(anime.get('rating', '')).strip()
+    rating = str(anime.get('rating', '')).strip()  # Ambil rating konten
     if rating:
-        tags.append(f"rating:{rating}")
+        tags.append(f"rating:{rating}")  # Rating konten membantu memfilter
 
-    year = get_release_year(anime)
+    year = get_release_year(anime)  # Ambil tahun rilis
     if year:
-        tags.append(f"year:{year}")
+        tags.append(f"year:{year}")  # Tahun rilis sebagai fitur temporal
 
     return sorted(set(tags))
 
@@ -748,16 +749,16 @@ def build_similarity_document(anime):
 def get_stopwords():
     """Ambil stopwords bahasa Inggris"""
     try:
-        return set(stopwords.words('english'))
+        return set(stopwords.words('english'))  # Ambil stopwords NLTK
     except LookupError:
         return {
             'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from',
             'has', 'he', 'in', 'is', 'it', 'its', 'of', 'on', 'that', 'the',
             'to', 'was', 'were', 'will', 'with', 'their', 'they', 'this'
-        }
+        }  # Gunakan daftar fallback jika data NLTK tidak ada
 
 # ===================================
-# FUNGSI PREPROCESSING TEXT (SIMPLIFIED - NO LEMMATIZATION)
+# FUNGSI PREPROCESSING TEXT
 # ===================================
 
 def preprocess_text(text):
@@ -765,18 +766,19 @@ def preprocess_text(text):
     Preprocessing simplified - tanpa lemmatization (JAUH LEBIH CEPAT)
     """
     if not text:
-        return ""
+        return ""  # Teks kosong tidak perlu diproses
     
-    text = text.lower()
-    text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)
-    text = re.sub(r'[^a-zA-Z\s]', '', text)
-    text = ' '.join(text.split())
+    text = text.lower()  # Normalisasi semua karakter ke huruf kecil
+    text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)  # Hapus URL
+    text = re.sub(r'[^a-zA-Z\s]', '', text)  # Hapus karakter non-alfabet
+    text = ' '.join(text.split())  # Hapus whitespace ganda
     
-    stop_words = get_stopwords()
-    words = text.split()
+    stop_words = get_stopwords()  # Ambil daftar stopwords
+    words = text.split()  # Pisah kata-kata menjadi list
     processed_words = [word for word in words if word not in stop_words and len(word) > 2]
+    # Hanya sisakan kata penting untuk TF-IDF
     
-    return ' '.join(processed_words)
+    return ' '.join(processed_words)  # Gabungkan kembali menjadi string
 
 # ===================================
 # FUNGSI GENRE FEATURE EXTRACTION
@@ -784,24 +786,25 @@ def preprocess_text(text):
 
 def extract_genres(anime_data):
     """Extract unique feature tags dan create binary vectors."""
-    all_tags = set()
+    all_tags = set()  # Kumpulan semua fitur metadata
     for anime in anime_data:
-        all_tags.update(get_anime_feature_tags(anime))
+        all_tags.update(get_anime_feature_tags(anime))  # Tambahkan fitur dari setiap anime
     
-    genre_list = sorted(list(all_tags))
+    genre_list = sorted(list(all_tags))  # Urutkan daftar fitur agar konsisten
     
-    genre_vectors = []
+    genre_vectors = []  # Simpan vektor biner untuk setiap anime
     for anime in anime_data:
-        anime_tags = set(get_anime_feature_tags(anime))
+        anime_tags = set(get_anime_feature_tags(anime))  # Fitur metadata anime saat ini
         vector = []
         for genre in genre_list:
             vector.append(1.0 if genre in anime_tags else 0.0)
+            # 1 jika fitur ada, 0 jika tidak
         genre_vectors.append(vector)
     
-    return genre_list, genre_vectors
+    return genre_list, genre_vectors  # Kembalikan daftar fitur dan vektornya
 
 # ===================================
-# FUNGSI TF-IDF DENGAN SKLEARN (CACHED)
+# FUNGSI TF-IDF DENGAN SKLEARN
 # ===================================
 
 @st.cache_resource
@@ -810,51 +813,57 @@ def build_tfidf_features(anime_data_tuple):
     Build TF-IDF matrix dengan sklearn (JAUH LEBIH CEPAT)
     @st.cache_resource = hanya jalan SEKALI, tidak rebuild saat rerun
     """
-    anime_data = list(anime_data_tuple)
+    anime_data = list(anime_data_tuple)  # Convert tuple ke list agar dapat diiterasi
     
     # Preprocess documents
-    documents = []
+    documents = []  # List dokumen teks yang diproses
     for anime in anime_data:
-        processed = preprocess_text(build_similarity_document(anime))
-        documents.append(processed)
+        processed = preprocess_text(build_similarity_document(anime))  # Buat dokument teks dari field anime
+        documents.append(processed)  # Tambahkan ke daftar dokumen
+        # Dokumen teks sudah dibersihkan dan siap dimasukkan ke TF-IDF
     
     # Build TF-IDF dengan sklearn
     tfidf = TfidfVectorizer(
-        max_features=5000,  # PENTING: Batasi vocabulary
-        stop_words='english'
+        max_features=5000,  # PENTING: Batasi vocabulary untuk reduksi noise
+        stop_words='english'  # Hapus stopwords internal sklearn
     )
-    tfidf_matrix = tfidf.fit_transform(documents)
+    tfidf_matrix = tfidf.fit_transform(documents)  # Fit TF-IDF pada semua dokumen
+    # tfidf_matrix berisi representasi numerik teks yang menentukan similarity
     
     # Extract genre vectors
-    genre_list, genre_vectors = extract_genres(anime_data)
+    genre_list, genre_vectors = extract_genres(anime_data)  # Buat vektor metadata genre
+    # Genre vectors dipakai sebagai fitur metadata tambahan
     
-    return tfidf_matrix, genre_vectors, genre_list, tfidf
+    return tfidf_matrix, genre_vectors, genre_list, tfidf  # Kembalikan model dan fitur
 
 def hybrid_similarity(tfidf_sim, genre_sim, tfidf_weight=0.55, genre_weight=0.45):
     """Kombinasi TF-IDF dan similarity detail metadata."""
-    return (tfidf_sim * tfidf_weight) + (genre_sim * genre_weight)
+    return (tfidf_sim * tfidf_weight) + (genre_sim * genre_weight)  # Hitung skor gabungan
+    # Perbandingan bobot menentukan seberapa besar pengaruh teks vs metadata
 
 def cosine_sim_vectors(vec1, vec2):
     """Calculate cosine similarity antara dua vectors"""
-    dot_product = sum(a * b for a, b in zip(vec1, vec2))
-    magnitude1 = math.sqrt(sum(a ** 2 for a in vec1))
-    magnitude2 = math.sqrt(sum(b ** 2 for b in vec2))
+    dot_product = sum(a * b for a, b in zip(vec1, vec2))  # Hitung dot product
+    magnitude1 = math.sqrt(sum(a ** 2 for a in vec1))  # Norm pertama
+    magnitude2 = math.sqrt(sum(b ** 2 for b in vec2))  # Norm kedua
     
     if magnitude1 == 0 or magnitude2 == 0:
-        return 0.0
+        return 0.0  # Vektor nol tidak bisa dibandingkan
     
-    return dot_product / (magnitude1 * magnitude2)
+    return dot_product / (magnitude1 * magnitude2)  # Return cosine similarity
+    # Ini menghitung seberapa besar sudut vektor; semakin kecil sudut, semakin mirip
 
 def get_matching_genres(anime1_genres, anime2_genres, genre_list):
     """Dapatkan tipe yang cocok"""
-    matching_genres = []
+    matching_genres = []  # Daftar fitur metadata yang sama
     for i, genre in enumerate(genre_list):
         if anime1_genres[i] == 1.0 and anime2_genres[i] == 1.0:
-            matching_genres.append(genre)
+            matching_genres.append(genre)  # Tambahkan genre yang cocok
+    # Matching genres menjadi penjelasan tambahan untuk output rekomendasi
     return matching_genres
 
 # ===================================
-# FUNGSI REKOMENDASI (OPTIMIZED)
+# FUNGSI REKOMENDASI
 # ===================================
 
 def get_anime_recommendations(anime_title, anime_data, tfidf_matrix, genre_vectors, genre_list, n_recommendations=5):
@@ -862,41 +871,43 @@ def get_anime_recommendations(anime_title, anime_data, tfidf_matrix, genre_vecto
     Dapatkan rekomendasi dengan sklearn cosine similarity
     OPTIMASI: Hanya hitung similarity untuk anime yang dicari, tidak semua
     """
-    anime_index = None
+    anime_index = None  # Indeks anime yang dipilih
     for i, anime in enumerate(anime_data):
         if str(anime.get('title', '')).lower() == str(anime_title).lower():
-            anime_index = i
+            anime_index = i  # Temukan anime dari judul yang dipilih
             break
     
     if anime_index is None:
-        return None
+        return None  # Jika judul tidak ditemukan, tidak ada output rekomendasi
     
-    # Hitung similarity dengan sklearn
+    # Hitung similarity dengan sklearn untuk dokumen TF-IDF
     similarities_tfidf = cosine_similarity(tfidf_matrix[anime_index], tfidf_matrix)[0]
+    # Simpan similarity TF-IDF terhadap semua anime lain
     
-    selected_genre_vector = genre_vectors[anime_index]
+    selected_genre_vector = genre_vectors[anime_index]  # Vektor metadata anime terpilih
+    # Ambil vektor metadata dari anime yang dipilih
     
-    similarities = []
+    similarities = []  # Simpan skor similarity kombinasi
     
     for i, anime in enumerate(anime_data):
         if i != anime_index:
-            # TF-IDF similarity dari sklearn
-            tfidf_sim = similarities_tfidf[i]
+            tfidf_sim = similarities_tfidf[i]  # Skor similarity teks/narasi
+            # Similarity teks/narasi dari TF-IDF
             
-            # Genre similarity manual (karena vector kecil)
             genre_sim = cosine_sim_vectors(selected_genre_vector, genre_vectors[i])
+            # Similarity metadata genre/type/source
             
-            # Hybrid
             hybrid_sim = hybrid_similarity(tfidf_sim, genre_sim)
+            # Gabungkan skor TF-IDF dan metadata menjadi skor akhir
             
-            # Get matching genres
             matching_types = get_matching_genres(selected_genre_vector, genre_vectors[i], genre_list)
+            # Jenis metadata yang cocok untuk menjelaskan output
             
-            similarities.append((i, hybrid_sim, anime, matching_types))
+            similarities.append((i, hybrid_sim, anime, matching_types))  # Tambahkan data rekomendasi
     
-    similarities.sort(key=lambda x: x[1], reverse=True)
+    similarities.sort(key=lambda x: x[1], reverse=True)  # Urutkan rekomendasi berdasarkan skor hybrid terbesar
     
-    recommendations = []
+    recommendations = []  # Siapkan list hasil
     for idx, sim, anime, matching_types in similarities[:n_recommendations]:
         recommendations.append({
             'anime_id': anime.get('anime_id', ''),
@@ -927,7 +938,7 @@ def get_anime_recommendations(anime_title, anime_data, tfidf_matrix, genre_vecto
             'image_url': anime.get('image_url', '')
         })
     
-    return recommendations
+    return recommendations  # Output akhir berisi daftar rekomendasi berdasar skor model
 
 # ===================================
 # FUNGSI FILTER & SEARCH
