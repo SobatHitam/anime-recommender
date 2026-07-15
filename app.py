@@ -1156,7 +1156,6 @@ def display_anime_detail_page(anime_data, anime_title):
     ])
 
     popularity_cards = ''.join([
-        build_detail_card("Anime ID", anime_id),
         build_detail_card("Rank", rank),
         build_detail_card("Popularity", popularity),
         build_detail_card("Members", members),
