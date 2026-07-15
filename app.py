@@ -1159,7 +1159,6 @@ def display_anime_detail_page(anime_data, anime_title):
         build_detail_card("Rank", rank),
         build_detail_card("Popularity", popularity),
         build_detail_card("Members", members),
-        build_detail_card("Favorites", favorites),
         build_detail_card("Scored By", scored_by),
     ])
 
