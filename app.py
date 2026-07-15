@@ -1280,7 +1280,7 @@ def main():
     # MAIN PAGE: REKOMENDASI ANIME SESUAI DOKUMENTASI DESAIN
     if True:
         st.markdown("### Dapatkan Rekomendasi Anime")
-        st.markdown("**Metode:** Content-Based Filtering dengan TF-IDF + Type Matching")
+        st.markdown("**Metode:** Content-Based Filtering dengan TF-IDF + Cosine Similarity")
         
         col1, col2 = st.columns([2, 1], gap="medium")
         anime_titles = [anime.get('title', 'Tanpa Judul') for anime in filtered_anime_data]
