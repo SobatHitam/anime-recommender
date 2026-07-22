@@ -349,26 +349,6 @@ Database saat ini berisi 50 anime populer dengan kategori:
 
 Rating berkisar dari 7.5 hingga 9.1
 
-## 🎓 Untuk Skripsi
-
-Fitur yang cocok untuk dokumentasi skripsi:
-- Algoritma TF-IDF dengan penjelasan formula
-- Cosine Similarity implementation
-- Text preprocessing pipeline
-- UI/UX implementation
-- Caching strategy
-- Performance optimization
-
-## 📄 Lisensi
-
-Project ini dibuat untuk tujuan pendidikan dan skripsi.
-
-## 👨‍💻 Author
-
-Dibuat sebagai sistem rekomendasi anime untuk keperluan skripsi.
-
 ---
 
 **Happy Recommending! 🎌**
-
-Jika ada pertanyaan atau isu, silakan check troubleshooting section di atas.
